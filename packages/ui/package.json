@@ -2,10 +2,9 @@
   "name": "@sienna/ui",
   "private": true,
   "version": "0.1.0",
-  "description": "Shared UI components (Shadcn + Motion.dev ready)",
+  "description": "Shared UI components (Pico.css + Motion.dev friendly)",
   "sideEffects": false,
   "exports": {
     ".": "./src/index.ts"
   }
 }
-

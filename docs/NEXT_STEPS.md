@@ -9,9 +9,8 @@
 - Integrate prompts from `Siennas-chat-apps/prompt-starter.md` into `packages/content`
 
 3) Install UI foundation
-- Add Shadcn UI and wire Motion.dev in `packages/ui`
-- Ensure reduced-motion friendly animations
+- Use Pico.css for base styling and wire Motion.dev in `packages/ui`
+- Ensure reduced-motion friendly animations (opt-in motion)
 
 4) Add basic CI later
 - Lint, typecheck, build each workspace
-
