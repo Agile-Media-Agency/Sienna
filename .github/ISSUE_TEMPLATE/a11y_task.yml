@@ -1,0 +1,26 @@
+name: Accessibility task
+description: Improve accessibility and inclusivity
+labels: ["a11y", "triage"]
+body:
+  - type: textarea
+    id: goal
+    attributes:
+      label: Goal
+      description: Describe the accessibility improvement.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps / Checklist
+      value: "- [ ] Keyboard access\n- [ ] Focus outlines\n- [ ] Reduced motion\n- [ ] Screen reader labels\n- [ ] High contrast"
+  - type: dropdown
+    id: app
+    attributes:
+      label: App Scope
+      options:
+        - apps/age-comparison
+        - apps/chat
+        - multiple
+        - packages only
+

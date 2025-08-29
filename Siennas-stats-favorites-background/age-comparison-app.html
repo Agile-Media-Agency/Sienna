@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Age Comparison Tool</title>
+    <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+    <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.30.0/index.min.js"></script>
+    <style>
+        /* Custom styles for accessibility */
+        .slider-track {
+            height: 20px;
+            background: linear-gradient(to right, #3b82f6, #8b5cf6);
+            border-radius: 10px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .slider-thumb {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border: 4px solid #8b5cf6;
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            cursor: grab;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        
+        .slider-thumb:active {
+            cursor: grabbing;
+            transform: translate(-50%, -50%) scale(1.1);
+        }
+
+        /* Large touch targets for accessibility */
+        button {
+            min-height: 48px;
+            min-width: 48px;
+        }
+        
+        /* High contrast mode support */
+        @media (prefers-contrast: high) {
+            .slider-track {
+                border: 2px solid currentColor;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect, useMemo } = React;
+
+        // Sample data - your daughter's favorite YouTubers and performers
+        const SAMPLE_PEOPLE = [
+            // Spy Ninjas Current Cast
+            { id: 1, name: "Chad Wild Clay", birthDate: "1984-03-10", group: "Spy Ninjas", active: true },
+            { id: 2, name: "Vy Qwaint", birthDate: "1986-01-03", group: "Spy Ninjas", active: true },
+            { id: 3, name: "Daniel Gizmo", birthDate: "1993-10-15", group: "Spy Ninjas", active: true },
+            { id: 4, name: "Regina Ginera", birthDate: "1998-08-11", group: "Spy Ninjas", active: true },
+            
+            // Spy Ninjas Former Cast
+            { id: 5, name: "Melvin PZ9", birthDate: "1991-05-21", group: "Spy Ninjas (Former)", active: false },
+            { id: 6, name: "Justin", birthDate: "1989-11-17", group: "Spy Ninjas (Former)", active: false },
+            
+            // XOMG POP
+            { id: 7, name: "Brooklyn", birthDate: "2010-12-20", group: "XOMG POP", active: true },
+            { id: 8, name: "Dallas", birthDate: "2011-06-15", group: "XOMG POP", active: true },
+            { id: 9, name: "Kinley", birthDate: "2011-03-22", group: "XOMG POP", active: true },
+            { id: 10, name: "Tinie T", birthDate: "2009-07-23", group: "XOMG POP", active: true },
+            
+            // Stephen Sharer & Family
+            { id: 11, name: "Stephen Sharer", birthDate: "1998-03-01", group: "Sharer Fam", active: true },
+            { id: 12, name: "Grace Sharer", birthDate: "2000-03-11", group: "Sharer Fam", active: true },
+            { id: 13, name: "Carter Sharer", birthDate: "1993-10-21", group: "Sharer Fam", active: true },
+            { id: 14, name: "Lizzy Sharer", birthDate: "1994-06-17", group: "Sharer Fam", active: true },
+            
+            // Your daughter and family
+            { id: 15, name: "Me (Your Daughter)", birthDate: "2010-11-24", group: "Family", active: true },
+            { id: 16, name: "Mom", birthDate: "1985-06-15", group: "Family", active: true },
+            { id: 17, name: "Dad", birthDate: "1983-09-22", group: "Family", active: true },
+        ];
+
+        // Calculate age at a specific date
+        function calculateAge(birthDate, targetDate) {
+            const birth = new Date(birthDate);
+            const target = new Date(targetDate);
+            
+            let age = target.getFullYear() - birth.getFullYear();
+            const monthDiff = target.getMonth() - birth.getMonth();
+            
+            if (monthDiff < 0 || (monthDiff === 0 && target.getDate() < birth.getDate())) {
+                age--;
+            }
+            
+            // Handle future birth dates
+            if (birth > target) {
+                return `Not born yet`;
+            }
+            
+            return `${age} years old`;
+        }
+
+        // Format date for display
+        function formatDate(date) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(date).toLocaleDateString('en-US', options);
+        }
+
+        // Main App Component
+        function AgeComparisonApp() {
+            const [selectedPeople, setSelectedPeople] = useState([15, 16, 17]); // Default: family
+            const [selectedDate, setSelectedDate] = useState(new Date());
+            const [allPeople, setAllPeople] = useState(SAMPLE_PEOPLE);
+            const [searchTerm, setSearchTerm] = useState('');
+            const [showAddForm, setShowAddForm] = useState(false);
+            
+            // Filter people based on search
+            const filteredPeople = useMemo(() => {
+                return allPeople.filter(person => 
+                    person.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                    person.group.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            }, [allPeople, searchTerm]);
+
+            // Get selected people objects
+            const selectedPeopleData = useMemo(() => {
+                return allPeople.filter(person => selectedPeople.includes(person.id));
+            }, [allPeople, selectedPeople]);
+
+            // Date slider handler
+            const handleDateChange = (e) => {
+                const sliderValue = parseInt(e.target.value);
+                const minDate = new Date('2000-01-01');
+                const maxDate = new Date('2040-12-31');
+                const totalDays = (maxDate - minDate) / (1000 * 60 * 60 * 24);
+                const targetDays = (sliderValue / 100) * totalDays;
+                const newDate = new Date(minDate.getTime() + targetDays * 1000 * 60 * 60 * 24);
+                setSelectedDate(newDate);
+            };
+
+            // Quick date buttons
+            const setQuickDate = (date) => {
+                setSelectedDate(date);
+            };
+
+            // Toggle person selection
+            const togglePerson = (personId) => {
+                setSelectedPeople(prev => 
+                    prev.includes(personId) 
+                        ? prev.filter(id => id !== personId)
+                        : [...prev, personId]
+                );
+            };
+
+            // Add new person
+            const addNewPerson = (name, birthDate, group) => {
+                const newPerson = {
+                    id: allPeople.length + 1,
+                    name,
+                    birthDate,
+                    group,
+                    active: true
+                };
+                setAllPeople([...allPeople, newPerson]);
+                setSelectedPeople([...selectedPeople, newPerson.id]);
+                setShowAddForm(false);
+            };
+
+            return (
+                <div className="min-h-screen bg-gradient-to-br from-purple-50 to-blue-50 p-4">
+                    <div className="max-w-6xl mx-auto">
+                        {/* Header */}
+                        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+                            <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600 mb-2">
+                                Age Comparison Tool
+                            </h1>
+                            <p className="text-gray-600 text-lg">
+                                See how old everyone was (or will be) at any point in time!
+                            </p>
+                        </div>
+
+                        {/* Date Selection */}
+                        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+                            <h2 className="text-2xl font-bold mb-4 text-gray-800">Select a Date</h2>
+                            
+                            {/* Quick Date Buttons */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+                                <button 
+                                    onClick={() => setQuickDate(new Date())}
+                                    className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors"
+                                >
+                                    Today
+                                </button>
+                                <button 
+                                    onClick={() => setQuickDate(new Date('2010-11-24'))}
+                                    className="bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors"
+                                >
+                                    My Birthday
+                                </button>
+                                <button 
+                                    onClick={() => setQuickDate(new Date('2025-11-24'))}
+                                    className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors"
+                                >
+                                    My Next Birthday
+                                </button>
+                                <button 
+                                    onClick={() => setQuickDate(new Date('2030-01-01'))}
+                                    className="bg-orange-500 hover:bg-orange-600 text-white font-bold py-3 px-4 rounded-lg text-lg transition-colors"
+                                >
+                                    Future (2030)
+                                </button>
+                            </div>
+
+                            {/* Date Display */}
+                            <div className="text-center mb-6">
+                                <div className="text-3xl font-bold text-gray-800">
+                                    {formatDate(selectedDate)}
+                                </div>
+                            </div>
+
+                            {/* Date Slider */}
+                            <div className="relative">
+                                <input
+                                    type="range"
+                                    min="0"
+                                    max="100"
+                                    value={((selectedDate - new Date('2000-01-01')) / (new Date('2040-12-31') - new Date('2000-01-01'))) * 100}
+                                    onChange={handleDateChange}
+                                    className="w-full h-5 bg-gradient-to-r from-blue-400 to-purple-400 rounded-lg appearance-none cursor-pointer slider"
+                                    style={{
+                                        WebkitAppearance: 'none',
+                                        background: 'linear-gradient(to right, #60a5fa, #a78bfa)',
+                                        height: '20px',
+                                        borderRadius: '10px',
+                                        outline: 'none'
+                                    }}
+                                />
+                                <div className="flex justify-between text-sm text-gray-600 mt-2">
+                                    <span>2000</span>
+                                    <span>2020</span>
+                                    <span>2040</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* People Selection */}
+                        <div className="bg-white rounded-2xl shadow-xl p-6 mb-6">
+                            <h2 className="text-2xl font-bold mb-4 text-gray-800">Select People to Compare</h2>
+                            
+                            {/* Search */}
+                            <div className="mb-4">
+                                <input
+                                    type="text"
+                                    placeholder="Search by name or group..."
+                                    value={searchTerm}
+                                    onChange={(e) => setSearchTerm(e.target.value)}
+                                    className="w-full px-4 py-3 text-lg border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none"
+                                />
+                            </div>
+
+                            {/* People Grid */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-96 overflow-y-auto">
+                                {filteredPeople.map(person => (
+                                    <div
+                                        key={person.id}
+                                        onClick={() => togglePerson(person.id)}
+                                        className={`p-4 rounded-lg cursor-pointer transition-all ${
+                                            selectedPeople.includes(person.id)
+                                                ? 'bg-gradient-to-r from-purple-500 to-blue-500 text-white shadow-lg transform scale-105'
+                                                : 'bg-gray-100 hover:bg-gray-200 text-gray-800'
+                                        }`}
+                                    >
+                                        <div className="font-bold text-lg">{person.name}</div>
+                                        <div className="text-sm opacity-90">{person.group}</div>
+                                        <div className="text-xs mt-1">Born: {formatDate(person.birthDate)}</div>
+                                    </div>
+                                ))}
+                            </div>
+                        </div>
+
+                        {/* Age Comparison Display */}
+                        <div className="bg-white rounded-2xl shadow-xl p-6">
+                            <h2 className="text-2xl font-bold mb-4 text-gray-800">
+                                Ages on {formatDate(selectedDate)}
+                            </h2>
+                            
+                            {selectedPeopleData.length === 0 ? (
+                                <p className="text-gray-500 text-center py-8 text-lg">
+                                    Select people above to compare their ages!
+                                </p>
+                            ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    {selectedPeopleData
+                                        .sort((a, b) => new Date(a.birthDate) - new Date(b.birthDate))
+                                        .map(person => {
+                                            const age = calculateAge(person.birthDate, selectedDate);
+                                            const isSpecial = person.name.includes("Me");
+                                            
+                                            return (
+                                                <div
+                                                    key={person.id}
+                                                    className={`p-6 rounded-xl ${
+                                                        isSpecial 
+                                                            ? 'bg-gradient-to-r from-purple-100 to-blue-100 border-2 border-purple-400' 
+                                                            : 'bg-gray-50'
+                                                    }`}
+                                                >
+                                                    <div className="flex justify-between items-start">
+                                                        <div>
+                                                            <div className="font-bold text-xl text-gray-800">
+                                                                {person.name}
+                                                            </div>
+                                                            <div className="text-sm text-gray-600 mb-2">
+                                                                {person.group}
+                                                            </div>
+                                                            <div className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
+                                                                {age}
+                                                            </div>
+                                                        </div>
+                                                        <button
+                                                            onClick={() => togglePerson(person.id)}
+                                                            className="text-red-500 hover:text-red-700 text-2xl font-bold"
+                                                        >
+                                                            ×
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+            );
+        }
+
+        // Render the app
+        ReactDOM.render(<AgeComparisonApp />, document.getElementById('root'));
+    </script>
+</body>
+</html>

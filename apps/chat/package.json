@@ -1,0 +1,12 @@
+{
+  "name": "@sienna/chat",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Chat/communication tools for Sienna",
+  "scripts": {
+    "dev": "echo Dev server TBD (e.g., Next.js) && exit 0",
+    "build": "echo Build TBD",
+    "start": "echo Start TBD"
+  }
+}
+

@@ -1,0 +1,12 @@
+{
+  "name": "@sienna/age-comparison",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Age comparison app for Sienna",
+  "scripts": {
+    "dev": "echo Dev server TBD (e.g., Vite) && exit 0",
+    "build": "echo Build TBD",
+    "start": "echo Start TBD"
+  }
+}
+

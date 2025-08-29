@@ -1,0 +1,15 @@
+# Node
+node_modules/
+*.log
+.DS_Store
+dist/
+build/
+.next/
+.turbo/
+.vercel/
+coverage/
+
+# Env
+.env
+.env.*
+

@@ -1,0 +1,10 @@
+{
+  "name": "@sienna/content",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Prompts, copy, images, and shared content",
+  "exports": {
+    ".": "./src/index.ts"
+  }
+}
+

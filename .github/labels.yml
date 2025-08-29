@@ -1,0 +1,31 @@
+- name: triage
+  color: 888888
+  description: Needs review/triage
+- name: type:feature
+  color: 36a64f
+  description: New capability or enhancement
+- name: type:bug
+  color: d73a4a
+  description: Something is broken
+- name: a11y
+  color: 1f6feb
+  description: Accessibility improvements
+- name: app:age-comparison
+  color: 0e8a16
+  description: Age comparison app scope
+- name: app:chat
+  color: fbca04
+  description: Chat app scope
+- name: priority:now
+  color: b60205
+  description: Work now
+- name: priority:next
+  color: fef2c0
+  description: Up next
+- name: priority:later
+  color: c2e0c6
+  description: Later
+- name: research
+  color: 0052cc
+  description: Investigation or discovery
+

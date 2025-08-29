@@ -1,0 +1,38 @@
+name: Feature request
+description: Propose a new capability or enhancement
+labels: ["type:feature", "triage"]
+body:
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: What problem does this solve for Sienna?
+      placeholder: Clear, plain-language description.
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance Criteria
+      description: Bullet points that define done.
+      placeholder: "- [ ] When I …, I see …"
+  - type: dropdown
+    id: app
+    attributes:
+      label: App Scope
+      options:
+        - apps/age-comparison
+        - apps/chat
+        - multiple
+        - packages only
+    validations:
+      required: true
+  - type: dropdown
+    id: priority
+    attributes:
+      label: Priority
+      options:
+        - now
+        - next
+        - later
+
