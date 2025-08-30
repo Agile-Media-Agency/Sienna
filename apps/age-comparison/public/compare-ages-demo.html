@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Compare Ages — Demo</title>
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@2.0.6/css/pico.min.css" />
+    <style>
+      :root { --radius: 24px; }
+      main { max-width: 760px; margin: 2rem auto; }
+      .card { border-radius: var(--radius); padding: 1.25rem; box-shadow: 0 8px 24px rgba(22,22,20,0.06); }
+      .sticky { position: sticky; top: 0; background: var(--pico-card-background-color); padding: .75rem 1rem; border-radius: var(--radius); margin-bottom: 1rem; }
+      .tokens { display: flex; gap: .5rem; flex-wrap: wrap; }
+      .token { background: var(--pico-muted-border-color); padding: .25rem .5rem; border-radius: 999px; font-size: .95rem; }
+      .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px,1fr)); gap: .75rem; }
+      .person { display: flex; align-items: center; gap: .5rem; border: 1px solid var(--pico-muted-border-color); border-radius: var(--radius); padding: .75rem; background: var(--pico-card-background-color); }
+      .results { margin-top: 1rem; }
+      @media (prefers-reduced-motion: reduce) { * { transition: none !important; animation: none !important; } }
+    </style>
+  </head>
+  <body>
+    <main>
+      <header class="sticky">
+        <strong>Sentence:</strong>
+        <div class="tokens" id="tokens"></div>
+        <div style="margin-top:.5rem; display:flex; gap:.5rem;">
+          <button id="undo" class="secondary">Undo</button>
+          <button id="reset" class="secondary">Reset</button>
+        </div>
+      </header>
+
+      <section class="card">
+        <h2>Compare ages (today)</h2>
+        <p>Select one or more people, then press Compare.</p>
+        <div class="grid" id="peopleList"></div>
+        <div style="margin-top:1rem; display:flex; gap:.5rem;">
+          <button id="compare">Compare</button>
+        </div>
+        <div class="results" id="results" aria-live="polite"></div>
+      </section>
+    </main>
+
+    <script>
+      // Demo data (mirrors packages/content/src/schema/*.json)
+      const PEOPLE = [
+        { id: 'sienna', label: 'You (S)', birthDate: '2011-06-15' },
+        { id: 'mommy', label: 'Mommy', birthDate: '1986-03-22' },
+        { id: 'daddy', label: 'Daddy', birthDate: '1984-11-05' },
+        { id: 'cwc', label: 'Chad Wild Clay', birthDate: '1984-03-10' },
+        { id: 'vyq', label: 'Vy Qwaint', birthDate: '1986-01-03' }
+      ];
+
+      // Utilities (yearsBetween, todayISO)
+      function yearsBetween(dateISO, anchorISO) {
+        const dob = new Date(dateISO);
+        const at = new Date(anchorISO);
+        if (isNaN(dob.getTime()) || isNaN(at.getTime())) return NaN;
+        let years = at.getFullYear() - dob.getFullYear();
+        const m = at.getMonth() - dob.getMonth();
+        if (m < 0 || (m === 0 && at.getDate() < dob.getDate())) years--;
+        return years;
+      }
+      function todayISO() { return new Date().toISOString().slice(0,10); }
+
+      // State
+      const selected = new Set();
+      const tokensEl = document.getElementById('tokens');
+      const resultsEl = document.getElementById('results');
+
+      function renderTokens() {
+        const tokens = ['How', 'old', 'are'];
+        const names = PEOPLE.filter(p => selected.has(p.id)).map(p => p.label);
+        const all = [...tokens, ...(names.length ? names : ['…'])];
+        tokensEl.innerHTML = all.map(t => `<span class="token">${t}</span>`).join('');
+      }
+
+      function renderPeople() {
+        const list = document.getElementById('peopleList');
+        list.innerHTML = PEOPLE.map(p => {
+          const checked = selected.has(p.id) ? 'checked' : '';
+          return `<label class="person"><input type="checkbox" data-id="${p.id}" ${checked}/> <span>${p.label}</span></label>`;
+        }).join('');
+        list.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+          cb.addEventListener('change', (e) => {
+            const id = e.target.getAttribute('data-id');
+            if (e.target.checked) selected.add(id); else selected.delete(id);
+            renderTokens();
+          });
+        });
+      }
+
+      function onCompare() {
+        const today = todayISO();
+        const people = PEOPLE.filter(p => selected.has(p.id));
+        if (!people.length) { resultsEl.innerHTML = '<em>Please select at least one person.</em>'; return; }
+        const out = people.map(p => `${p.label} is ${yearsBetween(p.birthDate, today)}.`).join('<br/>');
+        resultsEl.innerHTML = out;
+      }
+
+      document.getElementById('compare').addEventListener('click', onCompare);
+      document.getElementById('undo').addEventListener('click', () => {
+        const last = Array.from(selected).pop();
+        if (last) { selected.delete(last); renderPeople(); renderTokens(); }
+      });
+      document.getElementById('reset').addEventListener('click', () => {
+        selected.clear(); renderPeople(); renderTokens(); resultsEl.textContent='';
+      });
+
+      renderPeople();
+      renderTokens();
+    </script>
+  </body>
+  </html>
+
