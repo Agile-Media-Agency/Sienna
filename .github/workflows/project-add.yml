@@ -2,18 +2,23 @@ name: Add issues and PRs to Project
 
 on:
   issues:
-    types: [opened]
+    types: [opened, reopened]
   pull_request_target:
-    types: [opened]
+    types: [opened, reopened, synchronize]
+
+permissions:
+  contents: read
+  pull-requests: read
+  projects: write
 
 jobs:
   add_to_project:
-    if: ${{ github.event_name == 'issues' || github.event.pull_request.head.repo.full_name == github.repository }}
+    if: ${{ github.event_name == 'issues' || github.event_name == 'pull_request_target' }}
     runs-on: ubuntu-latest
     steps:
       - name: Add to project
         uses: actions/add-to-project@v0.6.1
         with:
           project-url: ${{ secrets.PROJECT_URL }}
-          github-token: ${{ secrets.PROJECT_TOKEN }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           fields: '{"Status":"Now"}'
