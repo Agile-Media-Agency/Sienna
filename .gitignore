@@ -13,3 +13,8 @@ coverage/
 .env
 .env.*
 
+# Data (raw/work are local only)
+data/raw/
+data/work/
+*.numbers
+
