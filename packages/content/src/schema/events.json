@@ -1,0 +1,9 @@
+{
+  "$meta": { "version": 1, "updated": "2025-08-29" },
+  "events": [
+    { "id": "kidz-bop-2012", "label": "Kidz Bop Concert (2012)", "date": "2012-08-12" },
+    { "id": "kidz-bop-2018", "label": "Kidz Bop Concert (2018)", "date": "2018-07-20" },
+    { "id": "first-shrek-musical", "label": "First Shrek Musical", "date": "2023-10-14" }
+  ]
+}
+
