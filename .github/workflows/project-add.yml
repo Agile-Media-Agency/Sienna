@@ -16,4 +16,4 @@ jobs:
         with:
           project-url: ${{ secrets.PROJECT_URL }}
           github-token: ${{ secrets.PROJECT_TOKEN }}
-
+          fields: '{"Status":"Now"}'
