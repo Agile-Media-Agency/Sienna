@@ -1,0 +1,11 @@
+{
+  "$meta": { "version": 1, "updated": "2025-08-29" },
+  "people": [
+    { "id": "sienna", "label": "You (S)", "birthDate": "2011-06-15" },
+    { "id": "mommy", "label": "Mommy", "birthDate": "1986-03-22" },
+    { "id": "daddy", "label": "Daddy", "birthDate": "1984-11-05" },
+    { "id": "cwc", "label": "Chad Wild Clay", "birthDate": "1984-03-10" },
+    { "id": "vyq", "label": "Vy Qwaint", "birthDate": "1986-01-03" }
+  ]
+}
+

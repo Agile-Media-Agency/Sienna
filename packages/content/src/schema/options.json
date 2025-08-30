@@ -1,0 +1,25 @@
+{
+  "$meta": { "version": 2, "updated": "2025-08-29" },
+  "choose_people": {
+    "type": "dynamic",
+    "source": "people",
+    "select": "multi",
+    "min": 1,
+    "max": 6
+  },
+  "choose_people_then_years": {
+    "type": "sequence",
+    "steps": [
+      { "id": "choose_people", "type": "dynamic", "source": "people", "select": "multi", "min": 1, "max": 6 },
+      { "id": "choose_years", "type": "range", "min": 0, "max": 50, "step": 1, "label": "Years old" }
+    ]
+  },
+  "choose_people_then_event": {
+    "type": "sequence",
+    "steps": [
+      { "id": "choose_people", "type": "dynamic", "source": "people", "select": "multi", "min": 1, "max": 6 },
+      { "id": "choose_event", "type": "dynamic", "source": "events", "select": "single" }
+    ]
+  }
+}
+

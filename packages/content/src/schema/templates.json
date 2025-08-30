@@ -1,0 +1,33 @@
+{
+  "$meta": { "version": 2, "updated": "2025-08-29" },
+  "templates": [
+    {
+      "id": "ask_age_compare",
+      "category": "ask",
+      "pattern": ["How old are", "{people[]}"],
+      "next": "choose_people",
+      "output": "list",
+      "phase": 2,
+      "description": "Compare ages for multiple selected people (today)."
+    },
+    {
+      "id": "ask_age_at_when_sienna",
+      "category": "ask",
+      "pattern": ["How old were", "{people[]}", "when Sienna was", "{years}"],
+      "next": "choose_people_then_years",
+      "output": "list",
+      "phase": 3,
+      "description": "Compute ages of people when Sienna was N years old."
+    },
+    {
+      "id": "ask_age_at_event",
+      "category": "ask",
+      "pattern": ["How old were", "{people[]}", "on", "{event}"],
+      "next": "choose_people_then_event",
+      "output": "list",
+      "phase": 3,
+      "description": "Compute ages of people on a specific event date."
+    }
+  ]
+}
+
