@@ -13,3 +13,5 @@ export const a11y = {
     typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches,
 };
 
+export * from './age';
+export * from './flags';

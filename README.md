@@ -27,3 +27,10 @@ Accessibility & Inclusivity
 
 Notes
 - This is scaffolded without installing dependencies. Choose your package manager and initialize per app.
+
+Schema readiness for future phases
+- packages/content/src/schema/people.json provides birthdays for dynamic age math.
+- packages/content/src/schema/events.json anchors comparisons to real dates.
+- packages/content/src/schema/templates.json includes Phase‑2/3 entries (ask_age_compare, ask_age_at_when_sienna, ask_age_at_event).
+- packages/content/src/schema/options.json contains multi‑select and sequenced steps to drive the wizard.
+These are inert until UI routes use them; Phase‑1 behavior is unchanged.
