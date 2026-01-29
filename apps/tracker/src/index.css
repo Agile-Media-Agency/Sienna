@@ -1,0 +1,162 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Import fonts */
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700&family=Quicksand:wght@500;600;700&display=swap');
+
+/* Base styles */
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-sienna-50 text-warm-800 font-sans antialiased;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+
+  /* Larger touch targets for accessibility */
+  button, a, input, select {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  /* Focus states */
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-sienna-500 rounded-lg;
+  }
+}
+
+/* Component classes */
+@layer components {
+  /* Navigation button */
+  .nav-btn {
+    @apply flex flex-col items-center justify-center gap-1 px-3 py-2 
+           rounded-xl font-medium text-sm transition-all duration-200
+           bg-white text-warm-600 border-2 border-sienna-200
+           hover:border-sienna-400 hover:bg-sienna-50
+           active:scale-95;
+  }
+  .nav-btn.active {
+    @apply bg-sienna-500 text-white border-sienna-500 shadow-soft;
+  }
+  .nav-btn .icon {
+    @apply text-xl;
+  }
+
+  /* Card container */
+  .card {
+    @apply bg-white rounded-2xl shadow-soft p-4 mb-4;
+  }
+  .card-header {
+    @apply text-lg font-semibold text-sienna-700 mb-3 flex items-center gap-2;
+  }
+
+  /* Person/item row */
+  .item-row {
+    @apply flex items-center gap-3 p-3 rounded-xl transition-colors
+           hover:bg-sienna-50 active:bg-sienna-100;
+  }
+  .item-row.highlight {
+    @apply bg-sienna-100/50 border-2 border-sienna-300;
+  }
+  .item-row .avatar {
+    @apply w-12 h-12 rounded-full flex items-center justify-center text-2xl
+           bg-gradient-to-br from-sienna-100 to-sienna-200;
+  }
+  .item-row .info {
+    @apply flex-1 min-w-0;
+  }
+  .item-row .name {
+    @apply font-semibold text-warm-800 truncate;
+  }
+  .item-row .meta {
+    @apply text-sm text-warm-500;
+  }
+
+  /* Age badge */
+  .age-badge {
+    @apply px-3 py-1 rounded-full font-bold text-white text-sm
+           shadow-soft;
+  }
+
+  /* Favorite/heart button */
+  .heart-btn {
+    @apply w-10 h-10 flex items-center justify-center rounded-full
+           text-xl transition-transform hover:scale-110 active:scale-95;
+  }
+
+  /* Pill buttons (for favorites, tags) */
+  .pill {
+    @apply inline-flex items-center gap-2 px-4 py-2 rounded-full
+           text-sm font-medium transition-all duration-200
+           bg-white border-2 border-sienna-200 text-warm-700
+           hover:border-sienna-400 hover:shadow-soft
+           active:scale-95;
+  }
+  .pill.selected {
+    @apply bg-sienna-500 text-white border-sienna-500 shadow-soft;
+  }
+  .pill .emoji {
+    @apply text-lg;
+  }
+
+  /* Search input */
+  .search-box {
+    @apply flex items-center gap-3 bg-white rounded-xl px-4 py-3
+           border-2 border-sienna-200 shadow-soft mb-4
+           focus-within:border-sienna-400 focus-within:shadow-medium
+           transition-all;
+  }
+  .search-box input {
+    @apply flex-1 bg-transparent border-none outline-none
+           text-warm-800 placeholder:text-warm-400;
+  }
+
+  /* Section header */
+  .section-header {
+    @apply text-sm font-semibold text-warm-500 uppercase tracking-wider mb-2 px-1;
+  }
+
+  /* Empty state */
+  .empty-state {
+    @apply text-center py-8 px-4;
+  }
+  .empty-state .icon {
+    @apply text-5xl mb-3;
+  }
+  .empty-state .message {
+    @apply text-warm-500;
+  }
+}
+
+/* Utility classes */
+@layer utilities {
+  /* Hide scrollbar but keep functionality */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Safe area padding for mobile */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 1rem);
+  }
+  .safe-top {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
