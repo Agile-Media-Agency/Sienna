@@ -1,13 +1,18 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
-  <defs>
-    <linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="#D4A574"/>
-      <stop offset="100%" stop-color="#C38D6B"/>
-    </linearGradient>
-  </defs>
-  <!-- Two interlocking circles (connection/comparison) -->
-  <circle cx="18" cy="18" r="12" fill="none" stroke="url(#grad)" stroke-width="3.5"/>
-  <circle cx="30" cy="30" r="12" fill="none" stroke="url(#grad)" stroke-width="3.5"/>
-  <!-- Sparkle -->
-  <path d="M38 10 L39.5 14 L44 14 L40.5 17 L42 21 L38 18.5 L34 21 L35.5 17 L32 14 L36.5 14 Z" fill="#E8A87C"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 32" fill="none">
+  <!-- Warm sienna color -->
+  <style>
+    .text { fill: #5D4E42; font-family: 'Georgia', 'Times New Roman', serif; font-size: 26px; font-weight: 400; }
+  </style>
+  
+  <!-- "s" -->
+  <text x="0" y="24" class="text">s</text>
+  
+  <!-- Star instead of dot on 'i' -->
+  <path d="M24 4 L25.2 7.5 L29 7.5 L26 9.8 L27.2 13.3 L24 11 L20.8 13.3 L22 9.8 L19 7.5 L22.8 7.5 Z" fill="#C38D6B"/>
+  
+  <!-- "i" stem (no dot) -->
+  <text x="20" y="24" class="text">ı</text>
+  
+  <!-- "enna" -->
+  <text x="30" y="24" class="text">enna</text>
 </svg>

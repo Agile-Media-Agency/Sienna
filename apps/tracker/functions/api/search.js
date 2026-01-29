@@ -1,7 +1,7 @@
 // GET /api/search?q=... - Search across people, events, groups
 export async function onRequestGet(context) {
   const { env, request } = context;
-  
+
   try {
     const url = new URL(request.url);
     const query = url.searchParams.get('q') || '';
