@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { 
   Heart, 
   Search, 
@@ -9,7 +9,8 @@ import {
   Clock,
   Sparkles,
   ChevronRight,
-  Cake
+  Cake,
+  Loader2
 } from 'lucide-react'
 
 // ============ HELPERS ============
@@ -27,31 +28,51 @@ function formatDate(dateStr) {
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
 }
 
-// ============ SAMPLE DATA ============
-const INITIAL_DATA = {
-  people: [
-    { id: 'sienna', name: 'Sienna', nickname: 'Sienna', birthday: '2010-11-24', emoji: '⭐', color: 'bg-coral', type: 'family', isFavorite: true },
-    { id: 'neil', name: 'Daddy (Neil)', nickname: 'Daddy', birthday: '1973-06-07', emoji: '👨', color: 'bg-sky', type: 'family', isFavorite: true },
-    { id: 'cheryl', name: 'Mommy (Cheryl)', nickname: 'Mommy', birthday: '1975-04-21', emoji: '👩', color: 'bg-lavender', type: 'family', isFavorite: true },
-    { id: 'chad', name: 'Chad Wild Clay', nickname: 'Chad', birthday: '1984-03-10', emoji: '🥷', color: 'bg-blush', type: 'youtuber', isFavorite: true },
-    { id: 'vy', name: 'Vy Qwaint', nickname: 'Vy', birthday: '1986-01-03', emoji: '🎀', color: 'bg-lavender', type: 'youtuber', isFavorite: true },
-    { id: 'brooklynn', name: 'Brooklynn Pitts', nickname: 'Brooklynn', birthday: '2010-09-28', emoji: '🦒', color: 'bg-sienna-400', type: 'musician', isFavorite: true },
-    { id: 'dallas', name: 'Dallas Skye', nickname: 'Dallas', birthday: '2011-11-17', emoji: '🎹', color: 'bg-sage-400', type: 'musician', isFavorite: false },
-    { id: 'kinley', name: 'Kinley Cunningham', nickname: 'Kinley', birthday: '2010-12-22', emoji: '🌈', color: 'bg-coral', type: 'musician', isFavorite: false },
-    { id: 'tinie', name: 'Tinie T', nickname: 'Tinie', birthday: '2011-03-13', emoji: '🎤', color: 'bg-lavender', type: 'musician', isFavorite: false },
-  ],
-  events: [
-    { id: 'shrek-kravis', name: 'Shrek Musical @ Kravis', date: '2024-09-28', emoji: '🎭', type: 'show', isFavorite: true, attended: true },
-    { id: 'kidzbop-2018', name: 'Kidz Bop Concert 2018', date: '2018-07-20', emoji: '🎵', type: 'concert', isFavorite: true, attended: true },
-    { id: 'kidzbop-2012', name: 'Kidz Bop Concert 2012', date: '2012-08-12', emoji: '🎵', type: 'concert', isFavorite: true, attended: true },
-    { id: 'xomg-formed', name: 'XOMG POP Formed', date: '2021-12-16', emoji: '💖', type: 'milestone', isFavorite: false },
-  ],
-  groups: [
-    { id: 'xomg', name: 'XOMG POP!', emoji: '💖', type: 'band', isFavorite: true },
-    { id: 'spy-ninjas', name: 'Spy Ninjas', emoji: '🥷', type: 'youtube', isFavorite: true },
-    { id: 'kidz-bop', name: 'Kidz Bop', emoji: '🎤', type: 'band', isFavorite: true },
-    { id: 'shrek-musical', name: 'Shrek the Musical', emoji: '🎭', type: 'show', isFavorite: true },
-  ]
+// ============ API FUNCTIONS ============
+async function fetchPeople() {
+  const res = await fetch('/api/people')
+  const data = await res.json()
+  return data.map(p => ({
+    ...p,
+    isFavorite: p.is_favorite === 1,
+    color: getColorForType(p.type)
+  }))
+}
+
+async function fetchEvents() {
+  const res = await fetch('/api/events')
+  const data = await res.json()
+  return data.map(e => ({
+    ...e,
+    isFavorite: e.is_favorite === 1
+  }))
+}
+
+async function fetchGroups() {
+  const res = await fetch('/api/groups')
+  const data = await res.json()
+  return data.map(g => ({
+    ...g,
+    isFavorite: g.is_favorite === 1
+  }))
+}
+
+async function toggleFavoriteAPI(itemType, itemId) {
+  const res = await fetch('/api/favorite', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ item_type: itemType, item_id: itemId })
+  })
+  return res.json()
+}
+
+function getColorForType(type) {
+  switch (type) {
+    case 'family': return 'bg-coral'
+    case 'youtuber': return 'bg-sky'
+    case 'musician': return 'bg-lavender'
+    default: return 'bg-sienna-400'
+  }
 }
 
 // ============ COMPONENTS ============
@@ -77,12 +98,12 @@ function HeartButton({ isFavorite, onToggle }) {
 
 function PersonRow({ person, showHeart = true, onToggleFavorite, dateForAge = null }) {
   const age = calcAge(person.birthday, dateForAge)
-  const isHighlight = person.id === 'sienna'
+  const isHighlight = person.type === 'family' && person.name?.toLowerCase().includes('sienna')
   
   return (
     <div className={`item-row ${isHighlight ? 'highlight' : ''}`}>
       <div className="avatar">
-        <span>{person.emoji}</span>
+        <span>{person.emoji || '👤'}</span>
       </div>
       <div className="info">
         <div className="name">{person.nickname || person.name}</div>
@@ -91,7 +112,7 @@ function PersonRow({ person, showHeart = true, onToggleFavorite, dateForAge = nu
           {formatDate(person.birthday)}
         </div>
       </div>
-      <span className={`age-badge ${person.color}`}>{age}</span>
+      <span className={`age-badge ${person.color || 'bg-sienna-400'}`}>{age}</span>
       {showHeart && (
         <HeartButton 
           isFavorite={person.isFavorite} 
@@ -105,7 +126,7 @@ function PersonRow({ person, showHeart = true, onToggleFavorite, dateForAge = nu
 function Pill({ item, selected, onClick }) {
   return (
     <button onClick={onClick} className={`pill ${selected ? 'selected' : ''}`}>
-      <span className="emoji">{item.emoji}</span>
+      <span className="emoji">{item.emoji || '📌'}</span>
       <span>{item.nickname || item.name}</span>
       {item.isFavorite && !selected && (
         <Heart className="w-3 h-3 fill-coral text-coral" />
@@ -114,11 +135,27 @@ function Pill({ item, selected, onClick }) {
   )
 }
 
+function LoadingSpinner() {
+  return (
+    <div className="flex items-center justify-center p-12">
+      <Loader2 className="w-8 h-8 text-sienna-500 animate-spin" />
+    </div>
+  )
+}
+
 // ============ PAGES ============
 
-function TimelinePage({ people, events, onToggleFavorite }) {
-  const [selected, setSelected] = useState(['sienna', 'neil', 'cheryl'])
+function TimelinePage({ people, events, onToggleFavorite, loading }) {
+  const [selected, setSelected] = useState([])
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  
+  // Auto-select family when loaded
+  useEffect(() => {
+    if (people.length > 0 && selected.length === 0) {
+      const familyIds = people.filter(p => p.type === 'family').map(p => p.id)
+      setSelected(familyIds)
+    }
+  }, [people])
   
   const favPeople = people.filter(p => p.isFavorite)
   const favEvents = events.filter(e => e.isFavorite)
@@ -138,6 +175,8 @@ function TimelinePage({ people, events, onToggleFavorite }) {
     const familyIds = people.filter(p => p.type === 'family').map(p => p.id)
     setSelected(prev => [...new Set([...prev, ...familyIds])])
   }
+
+  if (loading) return <LoadingSpinner />
 
   return (
     <div className="p-4 pb-24 animate-fade-in">
@@ -217,12 +256,14 @@ function TimelinePage({ people, events, onToggleFavorite }) {
   )
 }
 
-function PeoplePage({ people, onToggleFavorite }) {
+function PeoplePage({ people, onToggleFavorite, loading }) {
   const [search, setSearch] = useState('')
   const favorites = people.filter(p => p.isFavorite)
   const filtered = search 
-    ? people.filter(p => p.name.toLowerCase().includes(search.toLowerCase()))
+    ? people.filter(p => (p.name || '').toLowerCase().includes(search.toLowerCase()))
     : people
+
+  if (loading) return <LoadingSpinner />
 
   return (
     <div className="p-4 pb-24 animate-fade-in">
@@ -232,16 +273,18 @@ function PeoplePage({ people, onToggleFavorite }) {
       </h1>
       
       {/* Favorites */}
-      <div className="mb-4">
-        <div className="section-header flex items-center gap-1">
-          <Star className="w-3 h-3" /> Favorites
+      {favorites.length > 0 && (
+        <div className="mb-4">
+          <div className="section-header flex items-center gap-1">
+            <Star className="w-3 h-3" /> Favorites
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {favorites.map(p => (
+              <Pill key={p.id} item={p} />
+            ))}
+          </div>
         </div>
-        <div className="flex flex-wrap gap-2">
-          {favorites.map(p => (
-            <Pill key={p.id} item={p} />
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Search */}
       <div className="search-box">
@@ -256,22 +299,31 @@ function PeoplePage({ people, onToggleFavorite }) {
 
       {/* List */}
       <div className="card">
-        <div className="space-y-1">
-          {filtered.map(p => (
-            <PersonRow 
-              key={p.id} 
-              person={p} 
-              onToggleFavorite={onToggleFavorite}
-            />
-          ))}
-        </div>
+        {filtered.length > 0 ? (
+          <div className="space-y-1">
+            {filtered.map(p => (
+              <PersonRow 
+                key={p.id} 
+                person={p} 
+                onToggleFavorite={onToggleFavorite}
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">
+            <div className="icon">🔍</div>
+            <div className="message">No people found</div>
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-function EventsPage({ events, onToggleFavorite }) {
+function EventsPage({ events, onToggleFavorite, loading }) {
   const attended = events.filter(e => e.attended)
+
+  if (loading) return <LoadingSpinner />
 
   return (
     <div className="p-4 pb-24 animate-fade-in">
@@ -291,7 +343,7 @@ function EventsPage({ events, onToggleFavorite }) {
             {attended.map(e => (
               <div key={e.id} className="item-row">
                 <div className="avatar bg-sage-100">
-                  <span>{e.emoji}</span>
+                  <span>{e.emoji || '📅'}</span>
                 </div>
                 <div className="info">
                   <div className="name">{e.name}</div>
@@ -313,32 +365,41 @@ function EventsPage({ events, onToggleFavorite }) {
           <Calendar className="w-5 h-5 text-sienna-500" />
           All Events
         </div>
-        <div className="space-y-1">
-          {events.map(e => (
-            <div key={e.id} className="item-row">
-              <div className="avatar">
-                <span>{e.emoji}</span>
+        {events.length > 0 ? (
+          <div className="space-y-1">
+            {events.map(e => (
+              <div key={e.id} className="item-row">
+                <div className="avatar">
+                  <span>{e.emoji || '📅'}</span>
+                </div>
+                <div className="info">
+                  <div className="name">{e.name}</div>
+                  <div className="meta">{formatDate(e.date)}</div>
+                </div>
+                {e.attended && (
+                  <span className="text-xs text-sage-500 font-medium">✓ went</span>
+                )}
+                <HeartButton 
+                  isFavorite={e.isFavorite} 
+                  onToggle={() => onToggleFavorite(e.id)} 
+                />
               </div>
-              <div className="info">
-                <div className="name">{e.name}</div>
-                <div className="meta">{formatDate(e.date)}</div>
-              </div>
-              {e.attended && (
-                <span className="text-xs text-sage-500 font-medium">✓ went</span>
-              )}
-              <HeartButton 
-                isFavorite={e.isFavorite} 
-                onToggle={() => onToggleFavorite(e.id)} 
-              />
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">
+            <div className="icon">📅</div>
+            <div className="message">No events yet</div>
+          </div>
+        )}
       </div>
     </div>
   )
 }
 
-function GroupsPage({ groups, onToggleFavorite }) {
+function GroupsPage({ groups, onToggleFavorite, loading }) {
+  if (loading) return <LoadingSpinner />
+
   return (
     <div className="p-4 pb-24 animate-fade-in">
       <h1 className="text-2xl font-display font-bold text-sienna-700 mb-4 flex items-center gap-2">
@@ -347,24 +408,31 @@ function GroupsPage({ groups, onToggleFavorite }) {
       </h1>
       
       <div className="card">
-        <div className="space-y-1">
-          {groups.map(g => (
-            <div key={g.id} className="item-row">
-              <div className="avatar">
-                <span>{g.emoji}</span>
+        {groups.length > 0 ? (
+          <div className="space-y-1">
+            {groups.map(g => (
+              <div key={g.id} className="item-row">
+                <div className="avatar">
+                  <span>{g.emoji || '🎵'}</span>
+                </div>
+                <div className="info">
+                  <div className="name">{g.name}</div>
+                  <div className="meta capitalize">{g.type}</div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-warm-300" />
+                <HeartButton 
+                  isFavorite={g.isFavorite} 
+                  onToggle={() => onToggleFavorite(g.id)} 
+                />
               </div>
-              <div className="info">
-                <div className="name">{g.name}</div>
-                <div className="meta capitalize">{g.type}</div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-warm-300" />
-              <HeartButton 
-                isFavorite={g.isFavorite} 
-                onToggle={() => onToggleFavorite(g.id)} 
-              />
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state">
+            <div className="icon">🎵</div>
+            <div className="message">No groups yet</div>
+          </div>
+        )}
       </div>
     </div>
   )
@@ -373,15 +441,51 @@ function GroupsPage({ groups, onToggleFavorite }) {
 // ============ MAIN APP ============
 export default function App() {
   const [page, setPage] = useState('timeline')
-  const [data, setData] = useState(INITIAL_DATA)
+  const [loading, setLoading] = useState(true)
+  const [data, setData] = useState({ people: [], events: [], groups: [] })
 
-  const toggleFavorite = (type, id) => {
+  // Load data from API on mount
+  useEffect(() => {
+    async function loadData() {
+      try {
+        const [people, events, groups] = await Promise.all([
+          fetchPeople(),
+          fetchEvents(),
+          fetchGroups()
+        ])
+        setData({ people, events, groups })
+      } catch (err) {
+        console.error('Failed to load data:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+    loadData()
+  }, [])
+
+  const toggleFavorite = async (type, id) => {
+    // Optimistic update
     setData(prev => ({
       ...prev,
       [type]: prev[type].map(item => 
         item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
       )
     }))
+    
+    // Sync with API
+    const itemType = type === 'people' ? 'person' : type.slice(0, -1) // people→person, events→event, groups→group
+    try {
+      await toggleFavoriteAPI(itemType, id)
+    } catch (err) {
+      console.error('Failed to toggle favorite:', err)
+      // Revert on error
+      setData(prev => ({
+        ...prev,
+        [type]: prev[type].map(item => 
+          item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
+        )
+      }))
+    }
   }
 
   const renderPage = () => {
@@ -390,16 +494,19 @@ export default function App() {
         return <PeoplePage 
           people={data.people} 
           onToggleFavorite={(id) => toggleFavorite('people', id)}
+          loading={loading}
         />
       case 'events':
         return <EventsPage 
           events={data.events} 
           onToggleFavorite={(id) => toggleFavorite('events', id)}
+          loading={loading}
         />
       case 'groups':
         return <GroupsPage 
           groups={data.groups} 
           onToggleFavorite={(id) => toggleFavorite('groups', id)}
+          loading={loading}
         />
       case 'timeline':
       default:
@@ -407,6 +514,7 @@ export default function App() {
           people={data.people} 
           events={data.events}
           onToggleFavorite={(id) => toggleFavorite('events', id)}
+          loading={loading}
         />
     }
   }
