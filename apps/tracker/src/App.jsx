@@ -357,8 +357,9 @@ function PersonDetailView({ person, family, onBack }) {
 }
 
 function SongDetailView({ song, people, family, onBack }) {
-  // Get band members who were active when song was released
+  // Get band members who were active when song was released AND in the same group
   const bandMembers = people.filter(p =>
+    p.group_id === song.group_id &&
     p.joined_date &&
     new Date(p.joined_date) <= new Date(song.release_date) &&
     (!p.left_date || new Date(p.left_date) > new Date(song.release_date))
