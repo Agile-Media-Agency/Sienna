@@ -46,7 +46,10 @@ async function fetchPeople() {
   const res = await fetch('/api/people')
   const data = await res.json()
   return data.map(p => {
+    // Determine type from tags or group_type
     const type = p.tags?.toLowerCase().includes('family') ? 'family'
+               : p.group_type === 'youtube' ? 'youtuber'
+               : p.group_type === 'band' ? 'musician'
                : p.tags?.toLowerCase().includes('youtuber') ? 'youtuber'
                : p.tags?.toLowerCase().includes('musician') ? 'musician'
                : 'other'
@@ -151,7 +154,7 @@ function HeartButton({ isFavorite, onToggle }) {
   )
 }
 
-function PersonRow({ person, showHeart = true, onToggleFavorite, dateForAge = null, onClick, showStatus = false }) {
+function PersonRow({ person, showHeart = true, onToggleFavorite, dateForAge = null, onClick, showStatus = false, showGroup = true }) {
   const age = calcAge(person.birthday, dateForAge)
   const isHighlight = person.type === 'family' && person.name?.toLowerCase().includes('sienna')
   const isInBand = person.joined_date && (!person.left_date || (dateForAge && new Date(dateForAge) < new Date(person.left_date)))
@@ -166,6 +169,13 @@ function PersonRow({ person, showHeart = true, onToggleFavorite, dateForAge = nu
       </div>
       <div className="info">
         <div className="name">{person.nickname || person.name}</div>
+        {/* Show group/channel association */}
+        {showGroup && person.group_name && person.type !== 'family' && (
+          <div className="text-xs text-purple-500 font-medium flex items-center gap-1">
+            <span>{person.group_emoji || '📺'}</span>
+            <span>{person.group_name}</span>
+          </div>
+        )}
         <div className="meta flex items-center gap-1">
           <Cake className="w-3 h-3" />
           {formatDate(person.birthday)}

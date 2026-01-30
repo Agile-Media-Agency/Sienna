@@ -3,7 +3,7 @@ export async function onRequestGet(context) {
   const { env } = context;
 
   try {
-    // Get people with their tags, favorite status, and membership info
+    // Get people with their tags, favorite status, membership info, and group details
     const result = await env.DB.prepare(`
       SELECT
         p.*,
@@ -12,12 +12,16 @@ export async function onRequestGet(context) {
         m.joined_date,
         m.left_date,
         m.role,
-        m.group_id
+        m.group_id,
+        g.name as group_name,
+        g.emoji as group_emoji,
+        g.type as group_type
       FROM people p
       LEFT JOIN people_tags pt ON p.id = pt.person_id
       LEFT JOIN tags t ON pt.tag_id = t.id
       LEFT JOIN favorites f ON f.item_type = 'person' AND f.item_id = p.id
       LEFT JOIN memberships m ON p.id = m.person_id
+      LEFT JOIN groups g ON m.group_id = g.id
       GROUP BY p.id
       ORDER BY p.birthday ASC
     `).all();
