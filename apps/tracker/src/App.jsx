@@ -425,15 +425,15 @@ function SongDetailView({ song, people, family, onBack }) {
 
 // Simple horizontal pill button - clean and readable
 function CategoryButton({ label, count, isActive, onClick }) {
-  // Truncate long labels for better display
-  const shortLabel = label.length > 10 ? label.substring(0, 9) + '…' : label
+  // Truncate long labels for better display (keep it short for pills)
+  const shortLabel = label.length > 12 ? label.substring(0, 11) + '…' : label
   return (
     <button
       onClick={onClick}
       className={`
-        flex items-center gap-1.5 px-3 py-2
+        flex items-center gap-1.5 px-3 py-2 whitespace-nowrap
         rounded-full font-medium border-2 transition-all duration-200
-        active:scale-95 text-sm max-w-[120px]
+        active:scale-95 text-sm flex-shrink-0
         ${isActive
           ? 'bg-sienna-500 text-white border-sienna-500 shadow-md'
           : 'bg-white text-warm-600 border-warm-200 hover:border-warm-300 hover:bg-warm-50'
@@ -441,9 +441,9 @@ function CategoryButton({ label, count, isActive, onClick }) {
       `}
       title={label}
     >
-      <span className="truncate">{shortLabel}</span>
+      {shortLabel}
       {count > 0 && (
-        <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${isActive ? 'bg-white/30' : 'bg-warm-100'}`}>
+        <span className={`text-xs px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/30' : 'bg-warm-100'}`}>
           {count}
         </span>
       )}
