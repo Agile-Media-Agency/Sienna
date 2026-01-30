@@ -1,20 +1,25 @@
 import React, { useState, useEffect } from 'react'
-import { 
-  Heart, 
-  Search, 
-  Users, 
-  Calendar, 
-  Star, 
-  Music, 
+import {
+  Heart,
+  Search,
+  Users,
+  Calendar,
+  Star,
+  Music,
   Clock,
   Sparkles,
   ChevronRight,
   Cake,
-  Loader2
+  Loader2,
+  ArrowLeft,
+  Disc3,
+  Instagram,
+  MapPin
 } from 'lucide-react'
 
 // ============ HELPERS ============
 function calcAge(birthday, atDate = new Date()) {
+  if (!birthday) return null
   const birth = new Date(birthday)
   const at = new Date(atDate)
   let age = at.getFullYear() - birth.getFullYear()
@@ -24,8 +29,15 @@ function calcAge(birthday, atDate = new Date()) {
 }
 
 function formatDate(dateStr) {
+  if (!dateStr) return ''
   const d = new Date(dateStr)
   return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+}
+
+function formatBirthday(dateStr) {
+  if (!dateStr) return ''
+  const d = new Date(dateStr)
+  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })
 }
 
 // ============ API FUNCTIONS ============
@@ -33,7 +45,6 @@ async function fetchPeople() {
   const res = await fetch('/api/people')
   const data = await res.json()
   return data.map(p => {
-    // Derive type from tags (e.g., "Family" -> "family", "Musician" -> "musician")
     const type = p.tags?.toLowerCase().includes('family') ? 'family'
                : p.tags?.toLowerCase().includes('youtuber') ? 'youtuber'
                : p.tags?.toLowerCase().includes('musician') ? 'musician'
@@ -42,7 +53,7 @@ async function fetchPeople() {
       ...p,
       type,
       isFavorite: p.is_favorite === 1,
-      color: getColorForType(type)
+      color: p.color || getColorForType(type)
     }
   })
 }
@@ -52,9 +63,9 @@ async function fetchEvents() {
   const data = await res.json()
   return data.map(e => ({
     ...e,
-    name: e.title || e.name,  // Map title -> name for display
+    name: e.title || e.name,
     isFavorite: e.is_favorite === 1,
-    attended: e.attended === 1,  // Convert to boolean
+    attended: e.attended === 1,
     group_id: e.group_id,
     description: e.description
   }))
@@ -69,6 +80,16 @@ async function fetchGroups() {
   }))
 }
 
+async function fetchWorks() {
+  const res = await fetch('/api/works')
+  const data = await res.json()
+  return data.map(w => ({
+    ...w,
+    name: w.title,
+    isFavorite: w.is_favorite === 1
+  }))
+}
+
 async function toggleFavoriteAPI(itemType, itemId) {
   const res = await fetch('/api/favorite', {
     method: 'POST',
@@ -80,10 +101,10 @@ async function toggleFavoriteAPI(itemType, itemId) {
 
 function getColorForType(type) {
   switch (type) {
-    case 'family': return 'bg-coral'
-    case 'youtuber': return 'bg-sky'
-    case 'musician': return 'bg-lavender'
-    default: return 'bg-sienna-400'
+    case 'family': return '#FF69B4'
+    case 'youtuber': return '#E74C3C'
+    case 'musician': return '#9B59B6'
+    default: return '#C9A88C'
   }
 }
 
@@ -98,23 +119,38 @@ function NavButton({ label, icon: Icon, active, onClick }) {
   )
 }
 
+function BackButton({ onClick }) {
+  return (
+    <button
+      onClick={onClick}
+      className="mb-4 px-4 py-2 bg-sienna-500 text-white rounded-full font-medium text-sm flex items-center gap-1"
+    >
+      <ArrowLeft className="w-4 h-4" /> Back
+    </button>
+  )
+}
+
 function HeartButton({ isFavorite, onToggle }) {
   return (
     <button onClick={onToggle} className="heart-btn">
-      <Heart 
-        className={`w-5 h-5 transition-colors ${isFavorite ? 'fill-coral text-coral' : 'text-warm-300'}`} 
+      <Heart
+        className={`w-5 h-5 transition-colors ${isFavorite ? 'fill-coral text-coral' : 'text-warm-300'}`}
       />
     </button>
   )
 }
 
-function PersonRow({ person, showHeart = true, onToggleFavorite, dateForAge = null }) {
+function PersonRow({ person, showHeart = true, onToggleFavorite, dateForAge = null, onClick, showStatus = false }) {
   const age = calcAge(person.birthday, dateForAge)
   const isHighlight = person.type === 'family' && person.name?.toLowerCase().includes('sienna')
-  
+  const isInBand = person.joined_date && (!person.left_date || (dateForAge && new Date(dateForAge) < new Date(person.left_date)))
+
   return (
-    <div className={`item-row ${isHighlight ? 'highlight' : ''}`}>
-      <div className="avatar">
+    <div
+      className={`item-row ${isHighlight ? 'highlight' : ''} ${onClick ? 'cursor-pointer hover:bg-sienna-50' : ''}`}
+      onClick={onClick}
+    >
+      <div className="avatar" style={{ backgroundColor: person.color ? `${person.color}20` : undefined }}>
         <span>{person.emoji || '👤'}</span>
       </div>
       <div className="info">
@@ -123,12 +159,19 @@ function PersonRow({ person, showHeart = true, onToggleFavorite, dateForAge = nu
           <Cake className="w-3 h-3" />
           {formatDate(person.birthday)}
         </div>
+        {showStatus && person.left_date && (
+          <div className="text-xs text-warm-400">(left band)</div>
+        )}
       </div>
-      <span className={`age-badge ${person.color || 'bg-sienna-400'}`}>{age}</span>
-      {showHeart && (
-        <HeartButton 
-          isFavorite={person.isFavorite} 
-          onToggle={() => onToggleFavorite(person.id)} 
+      <span
+        className="age-badge"
+        style={{ backgroundColor: person.color || '#C9A88C' }}
+      >{age}</span>
+      {onClick && <ChevronRight className="w-4 h-4 text-warm-300" />}
+      {showHeart && onToggleFavorite && (
+        <HeartButton
+          isFavorite={person.isFavorite}
+          onToggle={(e) => { e?.stopPropagation(); onToggleFavorite(person.id) }}
         />
       )}
     </div>
@@ -155,20 +198,223 @@ function LoadingSpinner() {
   )
 }
 
+// ============ DETAIL VIEWS ============
+
+function PersonDetailView({ person, family, onBack }) {
+  const ageNow = calcAge(person.birthday)
+  const ageAtJoin = person.joined_date ? calcAge(person.birthday, person.joined_date) : null
+  const ageAtLeft = person.left_date ? calcAge(person.birthday, person.left_date) : null
+
+  return (
+    <div className="p-4 pb-24 animate-fade-in">
+      <BackButton onClick={onBack} />
+
+      {/* Person Header */}
+      <div
+        className="card mb-4"
+        style={{ background: `linear-gradient(135deg, ${person.color}30, white)` }}
+      >
+        <div className="text-center py-4">
+          <div
+            className="w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center text-4xl"
+            style={{ backgroundColor: person.color || '#FF69B4' }}
+          >
+            {person.emoji || '👤'}
+          </div>
+          <h2 className="text-2xl font-display font-bold text-sienna-700">
+            {person.nickname || person.name}
+          </h2>
+          {person.nickname && person.name !== person.nickname && (
+            <p className="text-warm-500 text-sm">{person.name}</p>
+          )}
+          {person.role && (
+            <p className="text-sienna-500 text-sm mt-1">{person.role}</p>
+          )}
+        </div>
+      </div>
+
+      {/* Birthday Card */}
+      <div className="card mb-4">
+        <div className="card-header">
+          <Cake className="w-5 h-5 text-sienna-500" />
+          Birthday
+        </div>
+        <div className="p-3">
+          <p className="text-lg font-semibold">{formatBirthday(person.birthday)}</p>
+          <p className="text-warm-500">Age now: <strong className="text-sienna-600">{ageNow}</strong></p>
+        </div>
+      </div>
+
+      {/* Ages at Key Moments - for band members */}
+      {ageAtJoin !== null && (
+        <div className="card mb-4">
+          <div className="card-header">
+            <Clock className="w-5 h-5 text-sienna-500" />
+            Ages at Key Moments
+          </div>
+          <div className="space-y-2 p-3">
+            <div className="flex justify-between items-center p-2 bg-green-50 rounded-lg">
+              <div>
+                <div className="font-medium text-sm">Joined Band</div>
+                <div className="text-xs text-warm-400">{formatDate(person.joined_date)}</div>
+              </div>
+              <span className="px-3 py-1 bg-green-500 text-white rounded-full font-bold">{ageAtJoin}</span>
+            </div>
+            {ageAtLeft !== null && (
+              <div className="flex justify-between items-center p-2 bg-pink-50 rounded-lg">
+                <div>
+                  <div className="font-medium text-sm">Left Band</div>
+                  <div className="text-xs text-warm-400">{formatDate(person.left_date)}</div>
+                </div>
+                <span className="px-3 py-1 bg-pink-500 text-white rounded-full font-bold">{ageAtLeft}</span>
+              </div>
+            )}
+            <div className="flex justify-between items-center p-2 bg-orange-50 rounded-lg">
+              <div>
+                <div className="font-bold text-sm">Right NOW</div>
+                <div className="text-xs text-warm-400">Today!</div>
+              </div>
+              <span className="px-3 py-1 bg-orange-500 text-white rounded-full font-bold">{ageNow}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Our Family When They Joined - for band members */}
+      {person.joined_date && family.length > 0 && (
+        <div className="card mb-4 bg-gradient-to-br from-blue-50 to-white">
+          <div className="card-header text-blue-600">
+            <Users className="w-5 h-5" />
+            Our Family When {person.nickname || person.name} Joined
+          </div>
+          <div className="space-y-1">
+            {family.map(f => (
+              <PersonRow
+                key={f.id}
+                person={f}
+                showHeart={false}
+                dateForAge={person.joined_date}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Fun Fact */}
+      {person.fun_fact && (
+        <div className="card mb-4">
+          <div className="card-header">
+            <Sparkles className="w-5 h-5 text-sienna-500" />
+            Fun Fact
+          </div>
+          <p className="p-3 text-warm-600">{person.fun_fact}</p>
+        </div>
+      )}
+
+      {/* Current Status */}
+      {person.current_status && (
+        <div className="card mb-4">
+          <div className="card-header">
+            <Star className="w-5 h-5 text-sienna-500" />
+            Now
+          </div>
+          <p className="p-3 text-warm-600">{person.current_status}</p>
+        </div>
+      )}
+
+      {/* Instagram */}
+      {person.instagram && (
+        <div
+          className="card text-center p-4"
+          style={{ backgroundColor: person.color || '#FF69B4' }}
+        >
+          <p className="text-white font-semibold flex items-center justify-center gap-2">
+            <Instagram className="w-5 h-5" />
+            {person.instagram}
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function SongDetailView({ song, people, family, onBack }) {
+  // Get band members who were active when song was released
+  const bandMembers = people.filter(p =>
+    p.joined_date &&
+    new Date(p.joined_date) <= new Date(song.release_date) &&
+    (!p.left_date || new Date(p.left_date) > new Date(song.release_date))
+  )
+
+  return (
+    <div className="p-4 pb-24 animate-fade-in">
+      <BackButton onClick={onBack} />
+
+      {/* Song Header */}
+      <div className="card mb-4 bg-gradient-to-br from-pink-500 to-purple-600 text-white">
+        <div className="text-center py-6">
+          <div className="text-5xl mb-2">{song.emoji || '🎵'}</div>
+          <h2 className="text-2xl font-display font-bold">{song.name}</h2>
+          <p className="opacity-90">{song.type} • {formatDate(song.release_date)}</p>
+          {song.note && <p className="mt-2 text-sm">{song.note}</p>}
+        </div>
+      </div>
+
+      {/* Band Members at Release */}
+      <div className="card mb-4 bg-gradient-to-br from-yellow-50 to-white">
+        <div className="card-header text-yellow-600">
+          <Music className="w-5 h-5" />
+          Band Members
+        </div>
+        <div className="space-y-1">
+          {bandMembers.map(m => (
+            <PersonRow
+              key={m.id}
+              person={m}
+              showHeart={false}
+              dateForAge={song.release_date}
+              showStatus={true}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* Our Family */}
+      {family.length > 0 && (
+        <div className="card bg-gradient-to-br from-blue-50 to-white">
+          <div className="card-header text-blue-600">
+            <Users className="w-5 h-5" />
+            Our Family
+          </div>
+          <div className="space-y-1">
+            {family.map(f => (
+              <PersonRow
+                key={f.id}
+                person={f}
+                showHeart={false}
+                dateForAge={song.release_date}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
 // ============ PAGES ============
 
 function TimelinePage({ people, events, onToggleFavorite, loading }) {
   const [selected, setSelected] = useState([])
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
-  
-  // Auto-select family when loaded
+
   useEffect(() => {
     if (people.length > 0 && selected.length === 0) {
       const familyIds = people.filter(p => p.type === 'family').map(p => p.id)
       setSelected(familyIds)
     }
   }, [people])
-  
+
   const favPeople = people.filter(p => p.isFavorite)
   const favEvents = events.filter(e => e.isFavorite)
   const selectedPeople = people.filter(p => selected.includes(p.id))
@@ -183,7 +429,6 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
 
   const selectEvent = (event) => {
     setSelectedDate(event.date)
-    // Auto-select family
     const familyIds = people.filter(p => p.type === 'family').map(p => p.id)
     setSelected(prev => [...new Set([...prev, ...familyIds])])
   }
@@ -196,47 +441,44 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
         <Clock className="w-6 h-6" />
         Timeline
       </h1>
-      
-      {/* Quick Add People */}
+
       <div className="mb-4">
         <div className="section-header flex items-center gap-1">
           <Star className="w-3 h-3" /> Favorites
         </div>
         <div className="flex flex-wrap gap-2">
           {favPeople.map(p => (
-            <Pill 
-              key={p.id} 
-              item={p} 
+            <Pill
+              key={p.id}
+              item={p}
               selected={selected.includes(p.id)}
-              onClick={() => togglePerson(p.id)} 
+              onClick={() => togglePerson(p.id)}
             />
           ))}
         </div>
       </div>
 
-      {/* Quick Events */}
       <div className="mb-4">
         <div className="section-header flex items-center gap-1">
           <Calendar className="w-3 h-3" /> Pick a Date
         </div>
         <div className="flex flex-wrap gap-2">
-          <Pill 
-            item={{ emoji: '📆', name: 'Today' }} 
+          <Pill
+            item={{ emoji: '📆', name: 'Today' }}
             selected={selectedDate === new Date().toISOString().split('T')[0]}
-            onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])} 
+            onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
           />
           {favEvents.map(e => (
-            <Pill 
-              key={e.id} 
-              item={e} 
+            <Pill
+              key={e.id}
+              item={e}
               selected={selectedDate === e.date}
-              onClick={() => selectEvent(e)} 
+              onClick={() => selectEvent(e)}
             />
           ))}
         </div>
       </div>
 
-      {/* Results */}
       {selectedPeople.length > 0 ? (
         <div className="card bg-gradient-to-br from-sienna-50 to-white">
           <div className="card-header">
@@ -247,9 +489,9 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
             {selectedPeople
               .sort((a, b) => new Date(a.birthday) - new Date(b.birthday))
               .map(p => (
-                <PersonRow 
-                  key={p.id} 
-                  person={p} 
+                <PersonRow
+                  key={p.id}
+                  person={p}
                   showHeart={false}
                   dateForAge={selectedDate}
                 />
@@ -268,12 +510,21 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
   )
 }
 
-function PeoplePage({ people, onToggleFavorite, loading }) {
+function PeoplePage({ people, family, onToggleFavorite, onSelectPerson, loading }) {
   const [search, setSearch] = useState('')
   const favorites = people.filter(p => p.isFavorite)
-  const filtered = search 
-    ? people.filter(p => (p.name || '').toLowerCase().includes(search.toLowerCase()))
-    : people
+
+  // Separate into groups
+  const familyMembers = people.filter(p => p.type === 'family')
+  const bandMembers = people.filter(p => p.joined_date) // has membership = band member
+  const others = people.filter(p => p.type !== 'family' && !p.joined_date)
+
+  const filtered = search
+    ? people.filter(p =>
+        (p.name || '').toLowerCase().includes(search.toLowerCase()) ||
+        (p.nickname || '').toLowerCase().includes(search.toLowerCase())
+      )
+    : null
 
   if (loading) return <LoadingSpinner />
 
@@ -283,8 +534,7 @@ function PeoplePage({ people, onToggleFavorite, loading }) {
         <Users className="w-6 h-6" />
         People
       </h1>
-      
-      {/* Favorites */}
+
       {favorites.length > 0 && (
         <div className="mb-4">
           <div className="section-header flex items-center gap-1">
@@ -292,50 +542,263 @@ function PeoplePage({ people, onToggleFavorite, loading }) {
           </div>
           <div className="flex flex-wrap gap-2">
             {favorites.map(p => (
-              <Pill key={p.id} item={p} />
+              <Pill key={p.id} item={p} onClick={() => onSelectPerson(p)} />
             ))}
           </div>
         </div>
       )}
 
-      {/* Search */}
       <div className="search-box">
         <Search className="w-5 h-5 text-warm-400" />
-        <input 
-          type="text" 
-          placeholder="Search people..." 
+        <input
+          type="text"
+          placeholder="Search people..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
       </div>
 
-      {/* List */}
+      {filtered ? (
+        <div className="card">
+          {filtered.length > 0 ? (
+            <div className="space-y-1">
+              {filtered.map(p => (
+                <PersonRow
+                  key={p.id}
+                  person={p}
+                  onToggleFavorite={onToggleFavorite}
+                  onClick={() => onSelectPerson(p)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="empty-state">
+              <div className="icon">🔍</div>
+              <div className="message">No people found</div>
+            </div>
+          )}
+        </div>
+      ) : (
+        <>
+          {/* Family */}
+          {familyMembers.length > 0 && (
+            <div className="card mb-4 bg-gradient-to-br from-pink-50 to-white">
+              <div className="card-header text-pink-600">
+                <Heart className="w-5 h-5" />
+                Our Family
+              </div>
+              <div className="space-y-1">
+                {familyMembers.map(p => (
+                  <PersonRow
+                    key={p.id}
+                    person={p}
+                    onToggleFavorite={onToggleFavorite}
+                    onClick={() => onSelectPerson(p)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Current Band Members */}
+          {bandMembers.filter(m => !m.left_date).length > 0 && (
+            <div className="card mb-4">
+              <div className="card-header text-purple-600">
+                <Music className="w-5 h-5" />
+                Current Members
+              </div>
+              <div className="space-y-1">
+                {bandMembers.filter(m => !m.left_date).map(p => (
+                  <PersonRow
+                    key={p.id}
+                    person={p}
+                    onToggleFavorite={onToggleFavorite}
+                    onClick={() => onSelectPerson(p)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Former Band Members */}
+          {bandMembers.filter(m => m.left_date).length > 0 && (
+            <div className="card mb-4">
+              <div className="card-header text-warm-500">
+                <Users className="w-5 h-5" />
+                Former Members
+              </div>
+              <div className="space-y-1">
+                {bandMembers.filter(m => m.left_date).map(p => (
+                  <PersonRow
+                    key={p.id}
+                    person={{...p, color: '#999'}}
+                    onToggleFavorite={onToggleFavorite}
+                    onClick={() => onSelectPerson(p)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Others */}
+          {others.length > 0 && (
+            <div className="card">
+              <div className="card-header">
+                <Star className="w-5 h-5 text-sienna-500" />
+                Others
+              </div>
+              <div className="space-y-1">
+                {others.map(p => (
+                  <PersonRow
+                    key={p.id}
+                    person={p}
+                    onToggleFavorite={onToggleFavorite}
+                    onClick={() => onSelectPerson(p)}
+                  />
+                ))}
+              </div>
+            </div>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
+function SongsPage({ works, people, family, onToggleFavorite, onSelectSong, loading }) {
+  if (loading) return <LoadingSpinner />
+
+  const albums = works.filter(w => w.type === 'album')
+  const singles = works.filter(w => w.type === 'single')
+
+  return (
+    <div className="p-4 pb-24 animate-fade-in">
+      <h1 className="text-2xl font-display font-bold text-sienna-700 mb-4 flex items-center gap-2">
+        <Disc3 className="w-6 h-6" />
+        Songs
+      </h1>
+
+      {/* Albums */}
+      {albums.length > 0 && (
+        <div className="mb-4">
+          {albums.map(album => (
+            <div
+              key={album.id}
+              className="card cursor-pointer hover:shadow-lg transition-shadow"
+              style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)' }}
+              onClick={() => onSelectSong(album)}
+            >
+              <div className="flex items-center gap-4 p-4">
+                <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center text-3xl">
+                  {album.emoji || '💿'}
+                </div>
+                <div className="flex-1 text-white">
+                  <div className="font-bold text-lg">{album.name}</div>
+                  <div className="opacity-90 text-sm">{formatDate(album.release_date)}</div>
+                  {album.note && <div className="text-sm mt-1">{album.note}</div>}
+                </div>
+                <ChevronRight className="w-6 h-6 text-white" />
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Singles */}
       <div className="card">
-        {filtered.length > 0 ? (
-          <div className="space-y-1">
-            {filtered.map(p => (
-              <PersonRow 
-                key={p.id} 
-                person={p} 
-                onToggleFavorite={onToggleFavorite}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="empty-state">
-            <div className="icon">🔍</div>
-            <div className="message">No people found</div>
-          </div>
-        )}
+        <div className="card-header">
+          <Music className="w-5 h-5 text-sienna-500" />
+          Singles
+        </div>
+        <div className="space-y-1">
+          {singles.map(song => (
+            <div
+              key={song.id}
+              className="item-row cursor-pointer hover:bg-sienna-50"
+              onClick={() => onSelectSong(song)}
+            >
+              <div className="avatar bg-pink-100">
+                <span>{song.emoji || '🎵'}</span>
+              </div>
+              <div className="info">
+                <div className="name">{song.name}</div>
+                <div className="meta">{formatDate(song.release_date)}</div>
+              </div>
+              <ChevronRight className="w-5 h-5 text-warm-300" />
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   )
 }
 
-function EventsPage({ events, onToggleFavorite, loading }) {
+function EventsPage({ events, people, family, onToggleFavorite, loading }) {
+  const [selectedEvent, setSelectedEvent] = useState(null)
   const attended = events.filter(e => e.attended)
 
   if (loading) return <LoadingSpinner />
+
+  if (selectedEvent) {
+    const bandMembers = people.filter(p =>
+      p.joined_date &&
+      new Date(p.joined_date) <= new Date(selectedEvent.date) &&
+      (!p.left_date || new Date(p.left_date) > new Date(selectedEvent.date))
+    )
+
+    return (
+      <div className="p-4 pb-24 animate-fade-in">
+        <BackButton onClick={() => setSelectedEvent(null)} />
+
+        <div className="card mb-4 bg-gradient-to-br from-purple-500 to-purple-700 text-white">
+          <div className="text-center py-6">
+            <div className="text-5xl mb-2">{selectedEvent.emoji || '📅'}</div>
+            <h2 className="text-2xl font-display font-bold">{selectedEvent.name}</h2>
+            <p className="opacity-90">{formatDate(selectedEvent.date)}</p>
+            {selectedEvent.description && <p className="mt-2 text-sm">{selectedEvent.description}</p>}
+          </div>
+        </div>
+
+        {bandMembers.length > 0 && (
+          <div className="card mb-4 bg-gradient-to-br from-yellow-50 to-white">
+            <div className="card-header text-yellow-600">
+              <Music className="w-5 h-5" />
+              Band Members
+            </div>
+            <div className="space-y-1">
+              {bandMembers.map(m => (
+                <PersonRow
+                  key={m.id}
+                  person={m}
+                  showHeart={false}
+                  dateForAge={selectedEvent.date}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {family.length > 0 && (
+          <div className="card bg-gradient-to-br from-blue-50 to-white">
+            <div className="card-header text-blue-600">
+              <Users className="w-5 h-5" />
+              Our Family
+            </div>
+            <div className="space-y-1">
+              {family.map(f => (
+                <PersonRow
+                  key={f.id}
+                  person={f}
+                  showHeart={false}
+                  dateForAge={selectedEvent.date}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="p-4 pb-24 animate-fade-in">
@@ -343,8 +806,7 @@ function EventsPage({ events, onToggleFavorite, loading }) {
         <Calendar className="w-6 h-6" />
         Events
       </h1>
-      
-      {/* Shows We Attended */}
+
       {attended.length > 0 && (
         <div className="card bg-gradient-to-br from-sage-50 to-white mb-4">
           <div className="card-header text-sage-600">
@@ -353,7 +815,11 @@ function EventsPage({ events, onToggleFavorite, loading }) {
           </div>
           <div className="space-y-1">
             {attended.map(e => (
-              <div key={e.id} className="item-row">
+              <div
+                key={e.id}
+                className="item-row cursor-pointer hover:bg-sage-50"
+                onClick={() => setSelectedEvent(e)}
+              >
                 <div className="avatar bg-sage-100">
                   <span>{e.emoji || '📅'}</span>
                 </div>
@@ -361,17 +827,13 @@ function EventsPage({ events, onToggleFavorite, loading }) {
                   <div className="name">{e.name}</div>
                   <div className="meta">{formatDate(e.date)}</div>
                 </div>
-                <HeartButton 
-                  isFavorite={e.isFavorite} 
-                  onToggle={() => onToggleFavorite(e.id)} 
-                />
+                <ChevronRight className="w-5 h-5 text-warm-300" />
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* All Events */}
       <div className="card">
         <div className="card-header">
           <Calendar className="w-5 h-5 text-sienna-500" />
@@ -380,7 +842,11 @@ function EventsPage({ events, onToggleFavorite, loading }) {
         {events.length > 0 ? (
           <div className="space-y-1">
             {events.map(e => (
-              <div key={e.id} className="item-row">
+              <div
+                key={e.id}
+                className="item-row cursor-pointer hover:bg-sienna-50"
+                onClick={() => setSelectedEvent(e)}
+              >
                 <div className="avatar">
                   <span>{e.emoji || '📅'}</span>
                 </div>
@@ -391,10 +857,7 @@ function EventsPage({ events, onToggleFavorite, loading }) {
                 {e.attended && (
                   <span className="text-xs text-sage-500 font-medium">✓ went</span>
                 )}
-                <HeartButton 
-                  isFavorite={e.isFavorite} 
-                  onToggle={() => onToggleFavorite(e.id)} 
-                />
+                <ChevronRight className="w-5 h-5 text-warm-300" />
               </div>
             ))}
           </div>
@@ -409,24 +872,21 @@ function EventsPage({ events, onToggleFavorite, loading }) {
   )
 }
 
-function GroupsPage({ groups, events, onToggleFavorite, loading }) {
+function GroupsPage({ groups, events, people, family, onToggleFavorite, loading }) {
   const [selectedGroup, setSelectedGroup] = useState(null)
 
   if (loading) return <LoadingSpinner />
 
-  // Show group detail view
   if (selectedGroup) {
     const groupEvents = events.filter(e => e.group_id === selectedGroup.id)
+    const groupMembers = people.filter(p => p.group_id === selectedGroup.id)
+    const currentMembers = groupMembers.filter(m => !m.left_date)
+    const formerMembers = groupMembers.filter(m => m.left_date)
+
     return (
       <div className="p-4 pb-24 animate-fade-in">
-        <button
-          onClick={() => setSelectedGroup(null)}
-          className="mb-4 px-4 py-2 bg-sienna-500 text-white rounded-full font-medium text-sm"
-        >
-          ← Back
-        </button>
+        <BackButton onClick={() => setSelectedGroup(null)} />
 
-        {/* Group Header */}
         <div className="card bg-gradient-to-br from-pink-100 to-white mb-4">
           <div className="text-center py-4">
             <div className="text-5xl mb-2">{selectedGroup.emoji || '🎵'}</div>
@@ -443,7 +903,36 @@ function GroupsPage({ groups, events, onToggleFavorite, loading }) {
           </div>
         </div>
 
-        {/* Group Events/Timeline */}
+        {/* Current Members */}
+        {currentMembers.length > 0 && (
+          <div className="card mb-4">
+            <div className="card-header text-purple-600">
+              <Music className="w-5 h-5" />
+              Current Members
+            </div>
+            <div className="space-y-1">
+              {currentMembers.map(m => (
+                <PersonRow key={m.id} person={m} showHeart={false} />
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Former Members */}
+        {formerMembers.length > 0 && (
+          <div className="card mb-4">
+            <div className="card-header text-warm-500">
+              <Users className="w-5 h-5" />
+              Former Members
+            </div>
+            <div className="space-y-1">
+              {formerMembers.map(m => (
+                <PersonRow key={m.id} person={{...m, color: '#999'}} showHeart={false} />
+              ))}
+            </div>
+          </div>
+        )}
+
         {groupEvents.length > 0 && (
           <div className="card">
             <div className="card-header">
@@ -516,18 +1005,20 @@ function GroupsPage({ groups, events, onToggleFavorite, loading }) {
 export default function App() {
   const [page, setPage] = useState('timeline')
   const [loading, setLoading] = useState(true)
-  const [data, setData] = useState({ people: [], events: [], groups: [] })
+  const [data, setData] = useState({ people: [], events: [], groups: [], works: [] })
+  const [selectedPerson, setSelectedPerson] = useState(null)
+  const [selectedSong, setSelectedSong] = useState(null)
 
-  // Load data from API on mount
   useEffect(() => {
     async function loadData() {
       try {
-        const [people, events, groups] = await Promise.all([
+        const [people, events, groups, works] = await Promise.all([
           fetchPeople(),
           fetchEvents(),
-          fetchGroups()
+          fetchGroups(),
+          fetchWorks()
         ])
-        setData({ people, events, groups })
+        setData({ people, events, groups, works })
       } catch (err) {
         console.error('Failed to load data:', err)
       } finally {
@@ -537,42 +1028,92 @@ export default function App() {
     loadData()
   }, [])
 
+  const family = data.people.filter(p => p.type === 'family')
+
   const toggleFavorite = async (type, id) => {
-    // Optimistic update
     setData(prev => ({
       ...prev,
-      [type]: prev[type].map(item => 
+      [type]: prev[type].map(item =>
         item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
       )
     }))
-    
-    // Sync with API
-    const itemType = type === 'people' ? 'person' : type.slice(0, -1) // people→person, events→event, groups→group
+
+    const itemType = type === 'people' ? 'person' : type === 'works' ? 'work' : type.slice(0, -1)
     try {
       await toggleFavoriteAPI(itemType, id)
     } catch (err) {
       console.error('Failed to toggle favorite:', err)
-      // Revert on error
       setData(prev => ({
         ...prev,
-        [type]: prev[type].map(item => 
+        [type]: prev[type].map(item =>
           item.id === id ? { ...item, isFavorite: !item.isFavorite } : item
         )
       }))
     }
   }
 
+  // Handle detail views
+  if (selectedPerson) {
+    return (
+      <div className="min-h-screen min-h-[100dvh] bg-sienna-50">
+        <header className="bg-gradient-to-r from-sienna-500 to-sienna-600 text-white p-4 safe-top">
+          <h1 className="text-xl font-display font-bold flex items-center gap-2">
+            <Sparkles className="w-5 h-5" />
+            sienna
+          </h1>
+        </header>
+        <PersonDetailView
+          person={selectedPerson}
+          family={family}
+          onBack={() => setSelectedPerson(null)}
+        />
+      </div>
+    )
+  }
+
+  if (selectedSong) {
+    return (
+      <div className="min-h-screen min-h-[100dvh] bg-sienna-50">
+        <header className="bg-gradient-to-r from-sienna-500 to-sienna-600 text-white p-4 safe-top">
+          <h1 className="text-xl font-display font-bold flex items-center gap-2">
+            <Sparkles className="w-5 h-5" />
+            sienna
+          </h1>
+        </header>
+        <SongDetailView
+          song={selectedSong}
+          people={data.people}
+          family={family}
+          onBack={() => setSelectedSong(null)}
+        />
+      </div>
+    )
+  }
+
   const renderPage = () => {
     switch (page) {
       case 'people':
-        return <PeoplePage 
-          people={data.people} 
+        return <PeoplePage
+          people={data.people}
+          family={family}
           onToggleFavorite={(id) => toggleFavorite('people', id)}
+          onSelectPerson={setSelectedPerson}
+          loading={loading}
+        />
+      case 'songs':
+        return <SongsPage
+          works={data.works}
+          people={data.people}
+          family={family}
+          onToggleFavorite={(id) => toggleFavorite('works', id)}
+          onSelectSong={setSelectedSong}
           loading={loading}
         />
       case 'events':
-        return <EventsPage 
-          events={data.events} 
+        return <EventsPage
+          events={data.events}
+          people={data.people}
+          family={family}
           onToggleFavorite={(id) => toggleFavorite('events', id)}
           loading={loading}
         />
@@ -580,13 +1121,15 @@ export default function App() {
         return <GroupsPage
           groups={data.groups}
           events={data.events}
+          people={data.people}
+          family={family}
           onToggleFavorite={(id) => toggleFavorite('groups', id)}
           loading={loading}
         />
       case 'timeline':
       default:
-        return <TimelinePage 
-          people={data.people} 
+        return <TimelinePage
+          people={data.people}
           events={data.events}
           onToggleFavorite={(id) => toggleFavorite('events', id)}
           loading={loading}
@@ -596,7 +1139,6 @@ export default function App() {
 
   return (
     <div className="min-h-screen min-h-[100dvh] bg-sienna-50">
-      {/* Header */}
       <header className="bg-gradient-to-r from-sienna-500 to-sienna-600 text-white p-4 safe-top">
         <h1 className="text-xl font-display font-bold flex items-center gap-2">
           <Sparkles className="w-5 h-5" />
@@ -605,37 +1147,41 @@ export default function App() {
         <p className="text-sienna-100 text-sm">How old was everyone?</p>
       </header>
 
-      {/* Content */}
       <main className="pb-20">
         {renderPage()}
       </main>
 
-      {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-sienna-100 p-2 safe-bottom">
         <div className="flex justify-around max-w-md mx-auto">
-          <NavButton 
-            label="Timeline" 
-            icon={Clock} 
-            active={page === 'timeline'} 
-            onClick={() => setPage('timeline')} 
+          <NavButton
+            label="Timeline"
+            icon={Clock}
+            active={page === 'timeline'}
+            onClick={() => setPage('timeline')}
           />
-          <NavButton 
-            label="People" 
-            icon={Users} 
-            active={page === 'people'} 
-            onClick={() => setPage('people')} 
+          <NavButton
+            label="People"
+            icon={Users}
+            active={page === 'people'}
+            onClick={() => setPage('people')}
           />
-          <NavButton 
-            label="Events" 
-            icon={Calendar} 
-            active={page === 'events'} 
-            onClick={() => setPage('events')} 
+          <NavButton
+            label="Songs"
+            icon={Disc3}
+            active={page === 'songs'}
+            onClick={() => setPage('songs')}
           />
-          <NavButton 
-            label="Groups" 
-            icon={Music} 
-            active={page === 'groups'} 
-            onClick={() => setPage('groups')} 
+          <NavButton
+            label="Events"
+            icon={Calendar}
+            active={page === 'events'}
+            onClick={() => setPage('events')}
+          />
+          <NavButton
+            label="Groups"
+            icon={Music}
+            active={page === 'groups'}
+            onClick={() => setPage('groups')}
           />
         </div>
       </nav>
