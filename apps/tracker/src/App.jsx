@@ -810,19 +810,25 @@ function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }
   )
 }
 
-function PeoplePage({ people, family, onToggleFavorite, onSelectPerson, loading }) {
+function PeoplePage({ people, groups = [], onToggleFavorite, onSelectPerson, loading }) {
   const [search, setSearch] = useState('')
   const favorites = people.filter(p => p.isFavorite)
 
-  // Separate into groups
+  // Group people by their actual group
   const familyMembers = people.filter(p => p.type === 'family')
-  const bandMembers = people.filter(p => p.joined_date) // has membership = band member
-  const others = people.filter(p => p.type !== 'family' && !p.joined_date)
+  const peopleWithGroups = people.filter(p => p.group_id && p.type !== 'family')
+  const peopleWithoutGroups = people.filter(p => !p.group_id && p.type !== 'family')
+
+  // Get unique group IDs that have people
+  const groupsWithPeople = groups.filter(g =>
+    peopleWithGroups.some(p => p.group_id === g.id)
+  )
 
   const filtered = search
     ? people.filter(p =>
         (p.name || '').toLowerCase().includes(search.toLowerCase()) ||
-        (p.nickname || '').toLowerCase().includes(search.toLowerCase())
+        (p.nickname || '').toLowerCase().includes(search.toLowerCase()) ||
+        (p.group_name || '').toLowerCase().includes(search.toLowerCase())
       )
     : null
 
@@ -882,8 +888,8 @@ function PeoplePage({ people, family, onToggleFavorite, onSelectPerson, loading 
         <>
           {/* Family */}
           {familyMembers.length > 0 && (
-            <div className="card mb-4 bg-gradient-to-br from-pink-50 to-white">
-              <div className="card-header text-pink-600">
+            <div className="card mb-4">
+              <div className="card-header text-warm-600">
                 <Heart className="w-5 h-5" />
                 Our Family
               </div>
@@ -894,61 +900,46 @@ function PeoplePage({ people, family, onToggleFavorite, onSelectPerson, loading 
                     person={p}
                     onToggleFavorite={onToggleFavorite}
                     onClick={() => onSelectPerson(p)}
+                    showGroup={false}
                   />
                 ))}
               </div>
             </div>
           )}
 
-          {/* Current Band Members */}
-          {bandMembers.filter(m => !m.left_date).length > 0 && (
-            <div className="card mb-4">
-              <div className="card-header text-purple-600">
-                <Music className="w-5 h-5" />
-                Current Members
+          {/* Each group gets its own section */}
+          {groupsWithPeople.map(group => {
+            const groupPeople = peopleWithGroups.filter(p => p.group_id === group.id)
+            return (
+              <div key={group.id} className="card mb-4">
+                <div className="card-header text-warm-600">
+                  <span className="text-lg mr-1">{group.emoji || '👥'}</span>
+                  {group.name}
+                </div>
+                <div className="space-y-1">
+                  {groupPeople.map(p => (
+                    <PersonRow
+                      key={p.id}
+                      person={p}
+                      onToggleFavorite={onToggleFavorite}
+                      onClick={() => onSelectPerson(p)}
+                      showGroup={false}
+                    />
+                  ))}
+                </div>
               </div>
-              <div className="space-y-1">
-                {bandMembers.filter(m => !m.left_date).map(p => (
-                  <PersonRow
-                    key={p.id}
-                    person={p}
-                    onToggleFavorite={onToggleFavorite}
-                    onClick={() => onSelectPerson(p)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
+            )
+          })}
 
-          {/* Former Band Members */}
-          {bandMembers.filter(m => m.left_date).length > 0 && (
-            <div className="card mb-4">
-              <div className="card-header text-warm-500">
-                <Users className="w-5 h-5" />
-                Former Members
-              </div>
-              <div className="space-y-1">
-                {bandMembers.filter(m => m.left_date).map(p => (
-                  <PersonRow
-                    key={p.id}
-                    person={{...p, color: '#999'}}
-                    onToggleFavorite={onToggleFavorite}
-                    onClick={() => onSelectPerson(p)}
-                  />
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Others */}
-          {others.length > 0 && (
+          {/* People without groups */}
+          {peopleWithoutGroups.length > 0 && (
             <div className="card">
-              <div className="card-header">
-                <Star className="w-5 h-5 text-sienna-500" />
+              <div className="card-header text-warm-600">
+                <Star className="w-5 h-5" />
                 Others
               </div>
               <div className="space-y-1">
-                {others.map(p => (
+                {peopleWithoutGroups.map(p => (
                   <PersonRow
                     key={p.id}
                     person={p}
@@ -1395,7 +1386,7 @@ export default function App() {
       case 'people':
         return <PeoplePage
           people={data.people}
-          family={family}
+          groups={data.groups}
           onToggleFavorite={(id) => toggleFavorite('people', id)}
           onSelectPerson={setSelectedPerson}
           loading={loading}
