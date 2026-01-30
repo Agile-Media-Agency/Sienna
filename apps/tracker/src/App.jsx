@@ -356,7 +356,7 @@ function PersonDetailView({ person, family, onBack }) {
   )
 }
 
-function SongDetailView({ song, people, family, onBack }) {
+function SongDetailView({ song, people, family, works, onBack }) {
   // Get band members who were active when song was released AND in the same group
   const bandMembers = people.filter(p =>
     p.group_id === song.group_id &&
@@ -364,6 +364,11 @@ function SongDetailView({ song, people, family, onBack }) {
     new Date(p.joined_date) <= new Date(song.release_date) &&
     (!p.left_date || new Date(p.left_date) > new Date(song.release_date))
   )
+
+  // Get album tracks if this is an album
+  const albumTracks = works
+    .filter(w => w.parent_id === song.id)
+    .sort((a, b) => (a.track_number || 0) - (b.track_number || 0))
 
   return (
     <div className="p-4 pb-24 animate-fade-in">
@@ -379,24 +384,76 @@ function SongDetailView({ song, people, family, onBack }) {
         </div>
       </div>
 
+      {/* Album Tracks with Lyrics Links */}
+      {albumTracks.length > 0 && (
+        <div className="card mb-4 bg-gradient-to-br from-purple-50 to-white">
+          <div className="card-header text-purple-600">
+            <Disc3 className="w-5 h-5" />
+            {albumTracks.length} Songs on this Album
+          </div>
+          <div className="space-y-1">
+            {albumTracks.map(track => (
+              <a
+                key={track.id}
+                href={track.lyrics_url || '#'}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="item-row hover:bg-purple-50 cursor-pointer block"
+              >
+                <div className="avatar bg-purple-100">
+                  <span>{track.emoji || '🎵'}</span>
+                </div>
+                <div className="info">
+                  <div className="name">{track.track_number}. {track.name}</div>
+                  {track.lyrics_url && (
+                    <div className="meta text-purple-500">Tap for lyrics →</div>
+                  )}
+                </div>
+              </a>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Single Song Lyrics Link */}
+      {song.lyrics_url && song.type !== 'album' && (
+        <a
+          href={song.lyrics_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="card mb-4 bg-gradient-to-br from-green-500 to-emerald-600 text-white block hover:shadow-lg transition-shadow"
+        >
+          <div className="flex items-center gap-4 p-4">
+            <div className="text-4xl">📝</div>
+            <div className="flex-1">
+              <div className="font-bold text-lg">View Lyrics</div>
+              <div className="opacity-90 text-sm">Tap to sing along!</div>
+            </div>
+            <ChevronRight className="w-6 h-6" />
+          </div>
+        </a>
+      )}
+
       {/* Band Members at Release */}
-      <div className="card mb-4 bg-gradient-to-br from-yellow-50 to-white">
-        <div className="card-header text-yellow-600">
-          <Music className="w-5 h-5" />
-          Band Members
+      {bandMembers.length > 0 && (
+        <div className="card mb-4 bg-gradient-to-br from-yellow-50 to-white">
+          <div className="card-header text-yellow-600">
+            <Music className="w-5 h-5" />
+            Band Members
+          </div>
+          <div className="space-y-1">
+            {bandMembers.map(m => (
+              <PersonRow
+                key={m.id}
+                person={m}
+                showHeart={false}
+                dateForAge={song.release_date}
+                showStatus={true}
+              />
+            ))}
+          </div>
         </div>
-        <div className="space-y-1">
-          {bandMembers.map(m => (
-            <PersonRow
-              key={m.id}
-              person={m}
-              showHeart={false}
-              dateForAge={song.release_date}
-              showStatus={true}
-            />
-          ))}
-        </div>
-      </div>
+      )}
 
       {/* Our Family */}
       {family.length > 0 && (
@@ -1423,6 +1480,7 @@ export default function App() {
           song={selectedSong}
           people={data.people}
           family={family}
+          works={data.works}
           onBack={() => setSelectedSong(null)}
         />
       </div>
