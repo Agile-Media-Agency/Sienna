@@ -415,10 +415,122 @@ function SongDetailView({ song, people, family, onBack }) {
 
 // ============ PAGES ============
 
+// Big accessible category button
+function CategoryButton({ emoji, label, count, isActive, onClick, color = 'sienna' }) {
+  const colorClasses = {
+    sienna: isActive ? 'bg-sienna-500 text-white border-sienna-500' : 'bg-white text-sienna-700 border-sienna-200 hover:border-sienna-400',
+    pink: isActive ? 'bg-pink-500 text-white border-pink-500' : 'bg-white text-pink-700 border-pink-200 hover:border-pink-400',
+    purple: isActive ? 'bg-purple-500 text-white border-purple-500' : 'bg-white text-purple-700 border-purple-200 hover:border-purple-400',
+    blue: isActive ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-blue-700 border-blue-200 hover:border-blue-400',
+    green: isActive ? 'bg-green-500 text-white border-green-500' : 'bg-white text-green-700 border-green-200 hover:border-green-400',
+    orange: isActive ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-orange-700 border-orange-200 hover:border-orange-400',
+  }
+
+  return (
+    <button
+      onClick={onClick}
+      className={`
+        flex flex-col items-center justify-center gap-1 p-3 min-w-[80px] min-h-[70px]
+        rounded-2xl font-semibold border-2 transition-all duration-200 shadow-sm
+        active:scale-95 ${colorClasses[color]}
+      `}
+    >
+      <span className="text-2xl">{emoji}</span>
+      <span className="text-xs">{label}</span>
+      {count > 0 && (
+        <span className={`text-[10px] px-2 py-0.5 rounded-full ${isActive ? 'bg-white/30' : 'bg-gray-100'}`}>
+          {count}
+        </span>
+      )}
+    </button>
+  )
+}
+
+// Scrollable person picker for accessibility
+function PersonPicker({ people, selected, onToggle, title }) {
+  if (people.length === 0) return null
+
+  return (
+    <div className="mb-3">
+      <div className="text-xs font-semibold text-warm-500 uppercase tracking-wide mb-2 px-1">
+        {title}
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        {people.map(p => {
+          const isSelected = selected.includes(p.id)
+          return (
+            <button
+              key={p.id}
+              onClick={() => onToggle(p.id)}
+              className={`
+                flex-shrink-0 flex flex-col items-center gap-1 p-3 min-w-[70px]
+                rounded-xl border-2 transition-all duration-200 active:scale-95
+                ${isSelected
+                  ? 'bg-sienna-500 text-white border-sienna-500 shadow-md'
+                  : 'bg-white text-warm-700 border-sienna-200 hover:border-sienna-400'
+                }
+              `}
+            >
+              <span className="text-2xl">{p.emoji || '👤'}</span>
+              <span className="text-xs font-medium truncate max-w-[60px]">
+                {p.nickname || p.name?.split(' ')[0]}
+              </span>
+              {isSelected && <span className="text-[10px]">✓</span>}
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// Event picker with big touchable buttons
+function EventPicker({ events, selectedDate, onSelectEvent, title }) {
+  if (events.length === 0) return null
+
+  return (
+    <div className="mb-3">
+      <div className="text-xs font-semibold text-warm-500 uppercase tracking-wide mb-2 px-1">
+        {title}
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+        {events.map(e => {
+          const isSelected = selectedDate === e.date
+          return (
+            <button
+              key={e.id}
+              onClick={() => onSelectEvent(e)}
+              className={`
+                flex-shrink-0 flex flex-col items-center gap-1 p-3 min-w-[90px]
+                rounded-xl border-2 transition-all duration-200 active:scale-95
+                ${isSelected
+                  ? 'bg-purple-500 text-white border-purple-500 shadow-md'
+                  : 'bg-white text-warm-700 border-purple-200 hover:border-purple-400'
+                }
+              `}
+            >
+              <span className="text-2xl">{e.emoji || '📅'}</span>
+              <span className="text-xs font-medium text-center line-clamp-2 max-w-[80px]">
+                {e.name}
+              </span>
+              <span className={`text-[10px] ${isSelected ? 'text-white/80' : 'text-warm-400'}`}>
+                {formatDate(e.date).split(',')[0]}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function TimelinePage({ people, events, onToggleFavorite, loading }) {
   const [selected, setSelected] = useState([])
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [showPeoplePicker, setShowPeoplePicker] = useState(null) // 'family' | 'band' | 'all' | null
+  const [showEventPicker, setShowEventPicker] = useState(false)
 
+  // Auto-select family on first load
   useEffect(() => {
     if (people.length > 0 && selected.length === 0) {
       const familyIds = people.filter(p => p.type === 'family').map(p => p.id)
@@ -426,8 +538,14 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
     }
   }, [people])
 
+  // Group people by category
+  const familyMembers = people.filter(p => p.type === 'family')
+  const bandMembers = people.filter(p => p.joined_date)
+  const currentBandMembers = bandMembers.filter(m => !m.left_date)
+  const formerBandMembers = bandMembers.filter(m => m.left_date)
   const favPeople = people.filter(p => p.isFavorite)
   const favEvents = events.filter(e => e.isFavorite)
+  const attendedEvents = events.filter(e => e.attended)
   const selectedPeople = people.filter(p => selected.includes(p.id))
 
   const togglePerson = (id) => {
@@ -438,10 +556,26 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
     }
   }
 
+  const selectAllInCategory = (categoryPeople) => {
+    const ids = categoryPeople.map(p => p.id)
+    setSelected(prev => [...new Set([...prev, ...ids])])
+  }
+
+  const clearCategory = (categoryPeople) => {
+    const ids = categoryPeople.map(p => p.id)
+    setSelected(prev => prev.filter(id => !ids.includes(id)))
+  }
+
   const selectEvent = (event) => {
     setSelectedDate(event.date)
-    const familyIds = people.filter(p => p.type === 'family').map(p => p.id)
+    // Auto-add family when selecting an event
+    const familyIds = familyMembers.map(p => p.id)
     setSelected(prev => [...new Set([...prev, ...familyIds])])
+    setShowEventPicker(false)
+  }
+
+  const categoryHasSelections = (categoryPeople) => {
+    return categoryPeople.some(p => selected.includes(p.id))
   }
 
   if (loading) return <LoadingSpinner />
@@ -453,43 +587,194 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
         Timeline
       </h1>
 
+      {/* Quick Favorites - only show if there are favorites */}
+      {favPeople.length > 0 && (
+        <div className="mb-4">
+          <div className="section-header flex items-center gap-1">
+            <Heart className="w-3 h-3 fill-coral text-coral" /> Quick Add Favorites
+          </div>
+          <div className="flex flex-wrap gap-2">
+            {favPeople.map(p => (
+              <Pill
+                key={p.id}
+                item={p}
+                selected={selected.includes(p.id)}
+                onClick={() => togglePerson(p.id)}
+              />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Category Buttons - Big and accessible! */}
       <div className="mb-4">
         <div className="section-header flex items-center gap-1">
-          <Star className="w-3 h-3" /> Favorites
+          <Users className="w-3 h-3" /> Browse People
         </div>
-        <div className="flex flex-wrap gap-2">
-          {favPeople.map(p => (
-            <Pill
-              key={p.id}
-              item={p}
-              selected={selected.includes(p.id)}
-              onClick={() => togglePerson(p.id)}
-            />
-          ))}
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <CategoryButton
+            emoji="👨‍👩‍👧‍👦"
+            label="Family"
+            count={familyMembers.length}
+            color="pink"
+            isActive={showPeoplePicker === 'family'}
+            onClick={() => setShowPeoplePicker(showPeoplePicker === 'family' ? null : 'family')}
+          />
+          <CategoryButton
+            emoji="🎤"
+            label="Band"
+            count={currentBandMembers.length}
+            color="purple"
+            isActive={showPeoplePicker === 'band'}
+            onClick={() => setShowPeoplePicker(showPeoplePicker === 'band' ? null : 'band')}
+          />
+          <CategoryButton
+            emoji="👋"
+            label="Former"
+            count={formerBandMembers.length}
+            color="sienna"
+            isActive={showPeoplePicker === 'former'}
+            onClick={() => setShowPeoplePicker(showPeoplePicker === 'former' ? null : 'former')}
+          />
+          <CategoryButton
+            emoji="👥"
+            label="Everyone"
+            count={people.length}
+            color="blue"
+            isActive={showPeoplePicker === 'all'}
+            onClick={() => setShowPeoplePicker(showPeoplePicker === 'all' ? null : 'all')}
+          />
         </div>
       </div>
 
+      {/* Expandable Person Picker */}
+      {showPeoplePicker && (
+        <div className="card mb-4 bg-gradient-to-br from-sienna-50 to-white">
+          <div className="flex justify-between items-center mb-3">
+            <span className="font-semibold text-sienna-700">
+              {showPeoplePicker === 'family' && '👨‍👩‍👧‍👦 Select Family'}
+              {showPeoplePicker === 'band' && '🎤 Select Band Members'}
+              {showPeoplePicker === 'former' && '👋 Select Former Members'}
+              {showPeoplePicker === 'all' && '👥 Select Anyone'}
+            </span>
+            <div className="flex gap-2">
+              <button
+                onClick={() => {
+                  const categoryPeople = showPeoplePicker === 'family' ? familyMembers
+                    : showPeoplePicker === 'band' ? currentBandMembers
+                    : showPeoplePicker === 'former' ? formerBandMembers
+                    : people
+                  selectAllInCategory(categoryPeople)
+                }}
+                className="text-xs px-3 py-1.5 bg-sienna-500 text-white rounded-full font-medium"
+              >
+                Add All
+              </button>
+              <button
+                onClick={() => {
+                  const categoryPeople = showPeoplePicker === 'family' ? familyMembers
+                    : showPeoplePicker === 'band' ? currentBandMembers
+                    : showPeoplePicker === 'former' ? formerBandMembers
+                    : people
+                  clearCategory(categoryPeople)
+                }}
+                className="text-xs px-3 py-1.5 bg-warm-200 text-warm-600 rounded-full font-medium"
+              >
+                Clear
+              </button>
+            </div>
+          </div>
+
+          {showPeoplePicker === 'family' && (
+            <PersonPicker people={familyMembers} selected={selected} onToggle={togglePerson} title="Family Members" />
+          )}
+          {showPeoplePicker === 'band' && (
+            <PersonPicker people={currentBandMembers} selected={selected} onToggle={togglePerson} title="Current Band" />
+          )}
+          {showPeoplePicker === 'former' && (
+            <PersonPicker people={formerBandMembers} selected={selected} onToggle={togglePerson} title="Former Members" />
+          )}
+          {showPeoplePicker === 'all' && (
+            <>
+              <PersonPicker people={familyMembers} selected={selected} onToggle={togglePerson} title="Family" />
+              <PersonPicker people={currentBandMembers} selected={selected} onToggle={togglePerson} title="Current Band" />
+              {formerBandMembers.length > 0 && (
+                <PersonPicker people={formerBandMembers} selected={selected} onToggle={togglePerson} title="Former Members" />
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Date Selection */}
       <div className="mb-4">
         <div className="section-header flex items-center gap-1">
           <Calendar className="w-3 h-3" /> Pick a Date
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Pill
-            item={{ emoji: '📆', name: 'Today' }}
-            selected={selectedDate === new Date().toISOString().split('T')[0]}
-            onClick={() => setSelectedDate(new Date().toISOString().split('T')[0])}
+        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          <CategoryButton
+            emoji="📆"
+            label="Today"
+            color="green"
+            isActive={selectedDate === new Date().toISOString().split('T')[0] && !showEventPicker}
+            onClick={() => {
+              setSelectedDate(new Date().toISOString().split('T')[0])
+              setShowEventPicker(false)
+            }}
           />
-          {favEvents.map(e => (
-            <Pill
-              key={e.id}
-              item={e}
-              selected={selectedDate === e.date}
-              onClick={() => selectEvent(e)}
+          {attendedEvents.length > 0 && (
+            <CategoryButton
+              emoji="🎤"
+              label="Concerts"
+              count={attendedEvents.length}
+              color="purple"
+              isActive={showEventPicker === 'attended'}
+              onClick={() => setShowEventPicker(showEventPicker === 'attended' ? false : 'attended')}
             />
-          ))}
+          )}
+          {favEvents.length > 0 && (
+            <CategoryButton
+              emoji="⭐"
+              label="Favorites"
+              count={favEvents.length}
+              color="orange"
+              isActive={showEventPicker === 'favorites'}
+              onClick={() => setShowEventPicker(showEventPicker === 'favorites' ? false : 'favorites')}
+            />
+          )}
+          <CategoryButton
+            emoji="📅"
+            label="All Events"
+            count={events.length}
+            color="blue"
+            isActive={showEventPicker === 'all'}
+            onClick={() => setShowEventPicker(showEventPicker === 'all' ? false : 'all')}
+          />
         </div>
       </div>
 
+      {/* Expandable Event Picker */}
+      {showEventPicker && (
+        <div className="card mb-4 bg-gradient-to-br from-purple-50 to-white">
+          <div className="font-semibold text-purple-700 mb-3">
+            {showEventPicker === 'attended' && '🎤 Concerts We Saw'}
+            {showEventPicker === 'favorites' && '⭐ Favorite Events'}
+            {showEventPicker === 'all' && '📅 All Events'}
+          </div>
+
+          {showEventPicker === 'attended' && (
+            <EventPicker events={attendedEvents} selectedDate={selectedDate} onSelectEvent={selectEvent} title="Tap to see ages!" />
+          )}
+          {showEventPicker === 'favorites' && (
+            <EventPicker events={favEvents} selectedDate={selectedDate} onSelectEvent={selectEvent} title="Tap to see ages!" />
+          )}
+          {showEventPicker === 'all' && (
+            <EventPicker events={events} selectedDate={selectedDate} onSelectEvent={selectEvent} title="Tap to see ages!" />
+          )}
+        </div>
+      )}
+
+      {/* Results - Ages on selected date */}
       {selectedPeople.length > 0 ? (
         <div className="card bg-gradient-to-br from-sienna-50 to-white">
           <div className="card-header">
@@ -508,12 +793,24 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
                 />
               ))}
           </div>
+
+          {/* Clear all button */}
+          <button
+            onClick={() => setSelected([])}
+            className="w-full mt-3 py-2 text-sm text-warm-500 hover:text-warm-700 font-medium"
+          >
+            Clear All
+          </button>
         </div>
       ) : (
         <div className="card">
           <div className="empty-state">
             <div className="icon">👆</div>
-            <div className="message">Tap people above to compare!</div>
+            <div className="message">
+              Tap the buttons above to pick people!
+              <br />
+              <span className="text-sm text-warm-400">No typing needed 😊</span>
+            </div>
           </div>
         </div>
       )}
