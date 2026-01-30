@@ -157,21 +157,20 @@ function HeartButton({ isFavorite, onToggle }) {
 function PersonRow({ person, showHeart = true, onToggleFavorite, dateForAge = null, onClick, showStatus = false, showGroup = true }) {
   const age = calcAge(person.birthday, dateForAge)
   const isHighlight = person.type === 'family' && person.name?.toLowerCase().includes('sienna')
-  const isInBand = person.joined_date && (!person.left_date || (dateForAge && new Date(dateForAge) < new Date(person.left_date)))
 
   return (
     <div
-      className={`item-row ${isHighlight ? 'highlight' : ''} ${onClick ? 'cursor-pointer hover:bg-sienna-50' : ''}`}
+      className={`item-row ${isHighlight ? 'highlight' : ''} ${onClick ? 'cursor-pointer hover:bg-warm-50' : ''}`}
       onClick={onClick}
     >
-      <div className="avatar" style={{ backgroundColor: person.color ? `${person.color}20` : undefined }}>
+      <div className="avatar bg-warm-100">
         <span>{person.emoji || '👤'}</span>
       </div>
       <div className="info">
         <div className="name">{person.nickname || person.name}</div>
-        {/* Show group/channel association */}
+        {/* Show group/channel association - subtle gray */}
         {showGroup && person.group_name && person.type !== 'family' && (
-          <div className="text-xs text-purple-500 font-medium flex items-center gap-1">
+          <div className="text-xs text-warm-400 flex items-center gap-1">
             <span>{person.group_emoji || '📺'}</span>
             <span>{person.group_name}</span>
           </div>
@@ -181,13 +180,11 @@ function PersonRow({ person, showHeart = true, onToggleFavorite, dateForAge = nu
           {formatDate(person.birthday)}
         </div>
         {showStatus && person.left_date && (
-          <div className="text-xs text-warm-400">(left band)</div>
+          <div className="text-xs text-warm-400">(left group)</div>
         )}
       </div>
-      <span
-        className="age-badge"
-        style={{ backgroundColor: person.color || '#C9A88C' }}
-      >{age}</span>
+      {/* Consistent neutral age badge */}
+      <span className="age-badge bg-sienna-400 text-white">{age}</span>
       {onClick && <ChevronRight className="w-4 h-4 text-warm-300" />}
       {showHeart && onToggleFavorite && (
         <HeartButton
@@ -425,30 +422,25 @@ function SongDetailView({ song, people, family, onBack }) {
 
 // ============ PAGES ============
 
-// Big accessible category button
-function CategoryButton({ emoji, label, count, isActive, onClick, color = 'sienna' }) {
-  const colorClasses = {
-    sienna: isActive ? 'bg-sienna-500 text-white border-sienna-500' : 'bg-white text-sienna-700 border-sienna-200 hover:border-sienna-400',
-    pink: isActive ? 'bg-pink-500 text-white border-pink-500' : 'bg-white text-pink-700 border-pink-200 hover:border-pink-400',
-    purple: isActive ? 'bg-purple-500 text-white border-purple-500' : 'bg-white text-purple-700 border-purple-200 hover:border-purple-400',
-    blue: isActive ? 'bg-blue-500 text-white border-blue-500' : 'bg-white text-blue-700 border-blue-200 hover:border-blue-400',
-    green: isActive ? 'bg-green-500 text-white border-green-500' : 'bg-white text-green-700 border-green-200 hover:border-green-400',
-    orange: isActive ? 'bg-orange-500 text-white border-orange-500' : 'bg-white text-orange-700 border-orange-200 hover:border-orange-400',
-  }
-
+// Big accessible category button - calming neutral colors
+function CategoryButton({ emoji, label, count, isActive, onClick }) {
   return (
     <button
       onClick={onClick}
       className={`
         flex flex-col items-center justify-center gap-1 p-3 min-w-[80px] min-h-[70px]
-        rounded-2xl font-semibold border-2 transition-all duration-200 shadow-sm
-        active:scale-95 ${colorClasses[color]}
+        rounded-2xl font-medium border-2 transition-all duration-200
+        active:scale-95
+        ${isActive
+          ? 'bg-sienna-500 text-white border-sienna-500 shadow-md'
+          : 'bg-white text-warm-600 border-warm-200 hover:border-warm-300 hover:bg-warm-50'
+        }
       `}
     >
       <span className="text-2xl">{emoji}</span>
       <span className="text-xs">{label}</span>
       {count > 0 && (
-        <span className={`text-[10px] px-2 py-0.5 rounded-full ${isActive ? 'bg-white/30' : 'bg-gray-100'}`}>
+        <span className={`text-[10px] px-2 py-0.5 rounded-full ${isActive ? 'bg-white/30' : 'bg-warm-100'}`}>
           {count}
         </span>
       )}
@@ -456,7 +448,7 @@ function CategoryButton({ emoji, label, count, isActive, onClick, color = 'sienn
   )
 }
 
-// Scrollable person picker for accessibility
+// Scrollable person picker for accessibility - neutral colors
 function PersonPicker({ people, selected, onToggle, title }) {
   if (people.length === 0) return null
 
@@ -477,7 +469,7 @@ function PersonPicker({ people, selected, onToggle, title }) {
                 rounded-xl border-2 transition-all duration-200 active:scale-95
                 ${isSelected
                   ? 'bg-sienna-500 text-white border-sienna-500 shadow-md'
-                  : 'bg-white text-warm-700 border-sienna-200 hover:border-sienna-400'
+                  : 'bg-white text-warm-600 border-warm-200 hover:border-warm-300'
                 }
               `}
             >
@@ -494,7 +486,7 @@ function PersonPicker({ people, selected, onToggle, title }) {
   )
 }
 
-// Event picker with big touchable buttons
+// Event picker with big touchable buttons - neutral colors
 function EventPicker({ events, selectedDate, onSelectEvent, title }) {
   if (events.length === 0) return null
 
@@ -514,8 +506,8 @@ function EventPicker({ events, selectedDate, onSelectEvent, title }) {
                 flex-shrink-0 flex flex-col items-center gap-1 p-3 min-w-[90px]
                 rounded-xl border-2 transition-all duration-200 active:scale-95
                 ${isSelected
-                  ? 'bg-purple-500 text-white border-purple-500 shadow-md'
-                  : 'bg-white text-warm-700 border-purple-200 hover:border-purple-400'
+                  ? 'bg-sienna-500 text-white border-sienna-500 shadow-md'
+                  : 'bg-white text-warm-600 border-warm-200 hover:border-warm-300'
                 }
               `}
             >
@@ -534,11 +526,11 @@ function EventPicker({ events, selectedDate, onSelectEvent, title }) {
   )
 }
 
-function TimelinePage({ people, events, onToggleFavorite, loading }) {
+function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }) {
   const [selected, setSelected] = useState([])
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
-  const [selectedEvent, setSelectedEvent] = useState(null) // Track the actual event object
-  const [showPeoplePicker, setShowPeoplePicker] = useState(null) // 'family' | 'band' | 'all' | null
+  const [selectedEvent, setSelectedEvent] = useState(null)
+  const [showPeoplePicker, setShowPeoplePicker] = useState(null) // 'family' | group_id | 'all' | null
   const [showEventPicker, setShowEventPicker] = useState(false)
 
   // Auto-select family on first load
@@ -549,15 +541,15 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
     }
   }, [people])
 
-  // Group people by category
+  // Group people by their actual group
   const familyMembers = people.filter(p => p.type === 'family')
-  const bandMembers = people.filter(p => p.joined_date)
-  const currentBandMembers = bandMembers.filter(m => !m.left_date)
-  const formerBandMembers = bandMembers.filter(m => m.left_date)
   const favPeople = people.filter(p => p.isFavorite)
   const favEvents = events.filter(e => e.isFavorite)
   const attendedEvents = events.filter(e => e.attended)
   const selectedPeople = people.filter(p => selected.includes(p.id))
+
+  // Get people for a specific group
+  const getPeopleInGroup = (groupId) => people.filter(p => p.group_id === groupId)
 
   const togglePerson = (id) => {
     if (selected.includes(id)) {
@@ -579,7 +571,7 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
 
   const selectEvent = (event) => {
     setSelectedDate(event.date)
-    setSelectedEvent(event) // Store the whole event so we can show its name/emoji
+    setSelectedEvent(event)
     // Auto-add family when selecting an event
     const familyIds = familyMembers.map(p => p.id)
     setSelected(prev => [...new Set([...prev, ...familyIds])])
@@ -588,12 +580,8 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
 
   const selectToday = () => {
     setSelectedDate(new Date().toISOString().split('T')[0])
-    setSelectedEvent(null) // Clear event when selecting "Today"
+    setSelectedEvent(null)
     setShowEventPicker(false)
-  }
-
-  const categoryHasSelections = (categoryPeople) => {
-    return categoryPeople.some(p => selected.includes(p.id))
   }
 
   if (loading) return <LoadingSpinner />
@@ -624,41 +612,40 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
         </div>
       )}
 
-      {/* Category Buttons - Big and accessible! */}
+      {/* Browse People - Family first, then groups */}
       <div className="mb-4">
         <div className="section-header flex items-center gap-1">
           <Users className="w-3 h-3" /> Browse People
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+          {/* Family always first */}
           <CategoryButton
             emoji="👨‍👩‍👧‍👦"
             label="Family"
             count={familyMembers.length}
-            color="pink"
             isActive={showPeoplePicker === 'family'}
             onClick={() => setShowPeoplePicker(showPeoplePicker === 'family' ? null : 'family')}
           />
-          <CategoryButton
-            emoji="🎤"
-            label="Band"
-            count={currentBandMembers.length}
-            color="purple"
-            isActive={showPeoplePicker === 'band'}
-            onClick={() => setShowPeoplePicker(showPeoplePicker === 'band' ? null : 'band')}
-          />
-          <CategoryButton
-            emoji="👋"
-            label="Former"
-            count={formerBandMembers.length}
-            color="sienna"
-            isActive={showPeoplePicker === 'former'}
-            onClick={() => setShowPeoplePicker(showPeoplePicker === 'former' ? null : 'former')}
-          />
+          {/* Show actual groups */}
+          {groups.map(g => {
+            const groupPeople = getPeopleInGroup(g.id)
+            if (groupPeople.length === 0) return null
+            return (
+              <CategoryButton
+                key={g.id}
+                emoji={g.emoji || '👥'}
+                label={g.name.length > 10 ? g.name.substring(0, 10) + '…' : g.name}
+                count={groupPeople.length}
+                isActive={showPeoplePicker === g.id}
+                onClick={() => setShowPeoplePicker(showPeoplePicker === g.id ? null : g.id)}
+              />
+            )
+          })}
+          {/* Everyone fallback */}
           <CategoryButton
             emoji="👥"
             label="Everyone"
             count={people.length}
-            color="blue"
             isActive={showPeoplePicker === 'all'}
             onClick={() => setShowPeoplePicker(showPeoplePicker === 'all' ? null : 'all')}
           />
@@ -667,60 +654,42 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
 
       {/* Expandable Person Picker */}
       {showPeoplePicker && (
-        <div className="card mb-4 bg-gradient-to-br from-sienna-50 to-white">
-          <div className="flex justify-between items-center mb-3">
-            <span className="font-semibold text-sienna-700">
-              {showPeoplePicker === 'family' && '👨‍👩‍👧‍👦 Select Family'}
-              {showPeoplePicker === 'band' && '🎤 Select Band Members'}
-              {showPeoplePicker === 'former' && '👋 Select Former Members'}
-              {showPeoplePicker === 'all' && '👥 Select Anyone'}
-            </span>
-            <div className="flex gap-2">
-              <button
-                onClick={() => {
-                  const categoryPeople = showPeoplePicker === 'family' ? familyMembers
-                    : showPeoplePicker === 'band' ? currentBandMembers
-                    : showPeoplePicker === 'former' ? formerBandMembers
-                    : people
-                  selectAllInCategory(categoryPeople)
-                }}
-                className="text-xs px-3 py-1.5 bg-sienna-500 text-white rounded-full font-medium"
-              >
-                Add All
-              </button>
-              <button
-                onClick={() => {
-                  const categoryPeople = showPeoplePicker === 'family' ? familyMembers
-                    : showPeoplePicker === 'band' ? currentBandMembers
-                    : showPeoplePicker === 'former' ? formerBandMembers
-                    : people
-                  clearCategory(categoryPeople)
-                }}
-                className="text-xs px-3 py-1.5 bg-warm-200 text-warm-600 rounded-full font-medium"
-              >
-                Clear
-              </button>
-            </div>
-          </div>
+        <div className="card mb-4 bg-warm-50">
+          {(() => {
+            // Determine which people to show based on selection
+            const selectedGroup = groups.find(g => g.id === showPeoplePicker)
+            const pickerPeople = showPeoplePicker === 'family' ? familyMembers
+              : showPeoplePicker === 'all' ? people
+              : selectedGroup ? getPeopleInGroup(selectedGroup.id)
+              : []
+            const pickerTitle = showPeoplePicker === 'family' ? '👨‍👩‍👧‍👦 Family'
+              : showPeoplePicker === 'all' ? '👥 Everyone'
+              : selectedGroup ? `${selectedGroup.emoji || '👥'} ${selectedGroup.name}`
+              : ''
 
-          {showPeoplePicker === 'family' && (
-            <PersonPicker people={familyMembers} selected={selected} onToggle={togglePerson} title="Family Members" />
-          )}
-          {showPeoplePicker === 'band' && (
-            <PersonPicker people={currentBandMembers} selected={selected} onToggle={togglePerson} title="Current Band" />
-          )}
-          {showPeoplePicker === 'former' && (
-            <PersonPicker people={formerBandMembers} selected={selected} onToggle={togglePerson} title="Former Members" />
-          )}
-          {showPeoplePicker === 'all' && (
-            <>
-              <PersonPicker people={familyMembers} selected={selected} onToggle={togglePerson} title="Family" />
-              <PersonPicker people={currentBandMembers} selected={selected} onToggle={togglePerson} title="Current Band" />
-              {formerBandMembers.length > 0 && (
-                <PersonPicker people={formerBandMembers} selected={selected} onToggle={togglePerson} title="Former Members" />
-              )}
-            </>
-          )}
+            return (
+              <>
+                <div className="flex justify-between items-center mb-3">
+                  <span className="font-semibold text-warm-700">{pickerTitle}</span>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => selectAllInCategory(pickerPeople)}
+                      className="text-xs px-3 py-1.5 bg-sienna-500 text-white rounded-full font-medium"
+                    >
+                      Add All
+                    </button>
+                    <button
+                      onClick={() => clearCategory(pickerPeople)}
+                      className="text-xs px-3 py-1.5 bg-warm-200 text-warm-600 rounded-full font-medium"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+                <PersonPicker people={pickerPeople} selected={selected} onToggle={togglePerson} title="Tap to add" />
+              </>
+            )
+          })()}
         </div>
       )}
 
@@ -733,7 +702,6 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
           <CategoryButton
             emoji="📆"
             label="Today"
-            color="green"
             isActive={!selectedEvent && selectedDate === new Date().toISOString().split('T')[0]}
             onClick={selectToday}
           />
@@ -742,7 +710,6 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
               emoji="🎤"
               label="Concerts"
               count={attendedEvents.length}
-              color="purple"
               isActive={showEventPicker === 'attended'}
               onClick={() => setShowEventPicker(showEventPicker === 'attended' ? false : 'attended')}
             />
@@ -752,7 +719,6 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
               emoji="⭐"
               label="Favorites"
               count={favEvents.length}
-              color="orange"
               isActive={showEventPicker === 'favorites'}
               onClick={() => setShowEventPicker(showEventPicker === 'favorites' ? false : 'favorites')}
             />
@@ -761,7 +727,6 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
             emoji="📅"
             label="All Events"
             count={events.length}
-            color="blue"
             isActive={showEventPicker === 'all'}
             onClick={() => setShowEventPicker(showEventPicker === 'all' ? false : 'all')}
           />
@@ -770,8 +735,8 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
 
       {/* Expandable Event Picker */}
       {showEventPicker && (
-        <div className="card mb-4 bg-gradient-to-br from-purple-50 to-white">
-          <div className="font-semibold text-purple-700 mb-3">
+        <div className="card mb-4 bg-warm-50">
+          <div className="font-semibold text-warm-700 mb-3">
             {showEventPicker === 'attended' && '🎤 Concerts We Saw'}
             {showEventPicker === 'favorites' && '⭐ Favorite Events'}
             {showEventPicker === 'all' && '📅 All Events'}
@@ -791,12 +756,12 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
 
       {/* Selected Event Banner - Shows what event is selected */}
       {selectedEvent && (
-        <div className="card mb-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+        <div className="card mb-4 bg-sienna-500 text-white">
           <div className="flex items-center gap-3">
             <div className="text-4xl">{selectedEvent.emoji || '📅'}</div>
             <div className="flex-1">
               <div className="font-bold text-lg">{selectedEvent.name}</div>
-              <div className="text-purple-200 text-sm">{formatDate(selectedEvent.date)}</div>
+              <div className="text-sienna-200 text-sm">{formatDate(selectedEvent.date)}</div>
             </div>
             <button
               onClick={selectToday}
@@ -1477,6 +1442,7 @@ export default function App() {
         return <TimelinePage
           people={data.people}
           events={data.events}
+          groups={data.groups}
           onToggleFavorite={(id) => toggleFavorite('events', id)}
           loading={loading}
         />
