@@ -158,7 +158,7 @@ function HeartButton({ isFavorite, onToggle }) {
 }
 
 // Context menu for long-press (mobile) / right-click (desktop)
-function PersonContextMenu({ person, position, onClose, onToggleFavorite, onViewProfile }) {
+function PersonContextMenu({ person, position, onClose, onToggleFavorite, onViewProfile, onShowGroup }) {
   const menuRef = useRef(null)
 
   useEffect(() => {
@@ -177,13 +177,27 @@ function PersonContextMenu({ person, position, onClose, onToggleFavorite, onView
 
   if (!position) return null
 
+  const handleFavorite = async () => {
+    if (onToggleFavorite) {
+      await onToggleFavorite(person.id)
+    }
+    onClose()
+  }
+
+  const handleShowGroup = () => {
+    if (onShowGroup && person.group_id) {
+      onShowGroup(person.group_id)
+    }
+    onClose()
+  }
+
   return (
     <div
       ref={menuRef}
-      className="fixed z-50 bg-white rounded-xl shadow-xl border border-warm-200 overflow-hidden min-w-[180px] animate-fade-in"
+      className="fixed z-50 bg-white rounded-xl shadow-xl border border-warm-200 overflow-hidden min-w-[200px] animate-fade-in"
       style={{
-        left: Math.min(position.x, window.innerWidth - 200),
-        top: Math.min(position.y, window.innerHeight - 200)
+        left: Math.min(position.x, window.innerWidth - 220),
+        top: Math.min(position.y, window.innerHeight - 250)
       }}
     >
       {/* Header */}
@@ -197,30 +211,28 @@ function PersonContextMenu({ person, position, onClose, onToggleFavorite, onView
         {onViewProfile && (
           <button
             onClick={() => { onViewProfile(person); onClose(); }}
-            className="w-full px-3 py-2 text-left flex items-center gap-3 hover:bg-warm-50 active:bg-warm-100"
+            className="w-full px-3 py-2.5 text-left flex items-center gap-3 hover:bg-warm-50 active:bg-warm-100"
           >
             <User className="w-4 h-4 text-warm-500" />
             <span>View Profile</span>
           </button>
         )}
 
-        {onToggleFavorite && (
-          <button
-            onClick={() => { onToggleFavorite(person.id); onClose(); }}
-            className="w-full px-3 py-2 text-left flex items-center gap-3 hover:bg-warm-50 active:bg-warm-100"
-          >
-            <Heart className={`w-4 h-4 ${person.isFavorite ? 'fill-coral text-coral' : 'text-warm-500'}`} />
-            <span>{person.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}</span>
-          </button>
-        )}
+        <button
+          onClick={handleFavorite}
+          className="w-full px-3 py-2.5 text-left flex items-center gap-3 hover:bg-warm-50 active:bg-warm-100"
+        >
+          <Heart className={`w-4 h-4 ${person.isFavorite ? 'fill-coral text-coral' : 'text-warm-500'}`} />
+          <span>{person.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}</span>
+        </button>
 
-        {person.group_name && (
+        {person.group_name && onShowGroup && (
           <button
-            onClick={onClose}
-            className="w-full px-3 py-2 text-left flex items-center gap-3 hover:bg-warm-50 active:bg-warm-100"
+            onClick={handleShowGroup}
+            className="w-full px-3 py-2.5 text-left flex items-center gap-3 hover:bg-warm-50 active:bg-warm-100"
           >
-            <Link className="w-4 h-4 text-warm-500" />
-            <span className="truncate">{person.group_emoji} {person.group_name}</span>
+            <Users className="w-4 h-4 text-warm-500" />
+            <span className="truncate">See {person.group_name}</span>
           </button>
         )}
       </div>
@@ -229,7 +241,7 @@ function PersonContextMenu({ person, position, onClose, onToggleFavorite, onView
       <div className="border-t border-warm-100">
         <button
           onClick={onClose}
-          className="w-full px-3 py-2 text-center text-warm-500 hover:bg-warm-50 active:bg-warm-100"
+          className="w-full px-3 py-2 text-center text-warm-500 hover:bg-warm-50 active:bg-warm-100 font-medium"
         >
           Cancel
         </button>
@@ -272,7 +284,7 @@ function useLongPress(callback, ms = 500) {
   }
 }
 
-function PersonRow({ person, showHeart = true, onToggleFavorite, onViewProfile, dateForAge = null, onClick, showStatus = false, showGroup = true }) {
+function PersonRow({ person, showHeart = true, onToggleFavorite, onViewProfile, onShowGroup, dateForAge = null, onClick, showStatus = false, showGroup = true }) {
   const [menuPos, setMenuPos] = useState(null)
   const age = calcAge(person.birthday, dateForAge)
   const isHighlight = person.type === 'family' && person.name?.toLowerCase().includes('sienna')
@@ -321,13 +333,14 @@ function PersonRow({ person, showHeart = true, onToggleFavorite, onViewProfile, 
           onClose={() => setMenuPos(null)}
           onToggleFavorite={onToggleFavorite}
           onViewProfile={onViewProfile}
+          onShowGroup={onShowGroup}
         />
       )}
     </>
   )
 }
 
-function Pill({ item, selected, onClick, onToggleFavorite, onViewProfile }) {
+function Pill({ item, selected, onClick, onToggleFavorite, onViewProfile, onShowGroup }) {
   const [menuPos, setMenuPos] = useState(null)
   const longPressHandlers = useLongPress((pos) => setMenuPos(pos))
 
@@ -351,6 +364,7 @@ function Pill({ item, selected, onClick, onToggleFavorite, onViewProfile }) {
           onClose={() => setMenuPos(null)}
           onToggleFavorite={onToggleFavorite}
           onViewProfile={onViewProfile}
+          onShowGroup={onShowGroup}
         />
       )}
     </>
@@ -659,7 +673,7 @@ function CategoryButton({ label, count, isActive, onClick }) {
 
 // Scrollable person picker for accessibility - neutral colors
 // Long-press or right-click for context menu
-function PersonPicker({ people, selected, onToggle, onToggleFavorite, onViewProfile, title }) {
+function PersonPicker({ people, selected, onToggle, onToggleFavorite, onViewProfile, onShowGroup, title }) {
   const [menuState, setMenuState] = useState({ person: null, position: null })
 
   if (people.length === 0) return null
@@ -692,6 +706,7 @@ function PersonPicker({ people, selected, onToggle, onToggleFavorite, onViewProf
           onClose={() => setMenuState({ person: null, position: null })}
           onToggleFavorite={onToggleFavorite}
           onViewProfile={onViewProfile}
+          onShowGroup={onShowGroup}
         />
       )}
     </div>
@@ -849,6 +864,7 @@ function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }
                 selected={selected.includes(p.id)}
                 onClick={() => togglePerson(p.id)}
                 onToggleFavorite={onToggleFavorite}
+                onShowGroup={(gid) => setShowPeoplePicker(gid)}
               />
             ))}
           </div>
@@ -923,7 +939,7 @@ function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }
                     </button>
                   </div>
                 </div>
-                <PersonPicker people={pickerPeople} selected={selected} onToggle={togglePerson} onToggleFavorite={onToggleFavorite} title="Tap to add" />
+                <PersonPicker people={pickerPeople} selected={selected} onToggle={togglePerson} onToggleFavorite={onToggleFavorite} onShowGroup={(gid) => setShowPeoplePicker(gid)} title="Tap to add" />
               </>
             )
           })()}
@@ -1026,6 +1042,7 @@ function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }
                   person={p}
                   showHeart={true}
                   onToggleFavorite={onToggleFavorite}
+                  onShowGroup={(gid) => setShowPeoplePicker(gid)}
                   dateForAge={selectedDate}
                 />
               ))}
