@@ -272,68 +272,88 @@ function useLongPress(callback, ms = 500) {
   }
 }
 
-function PersonRow({ person, showHeart = true, onToggleFavorite, dateForAge = null, onClick, showStatus = false, showGroup = true }) {
+function PersonRow({ person, showHeart = true, onToggleFavorite, onViewProfile, dateForAge = null, onClick, showStatus = false, showGroup = true }) {
+  const [menuPos, setMenuPos] = useState(null)
   const age = calcAge(person.birthday, dateForAge)
   const isHighlight = person.type === 'family' && person.name?.toLowerCase().includes('sienna')
+  const longPressHandlers = useLongPress((pos) => setMenuPos(pos))
 
   return (
-    <div
-      className={`item-row ${isHighlight ? 'highlight' : ''} ${onClick ? 'cursor-pointer hover:bg-warm-50' : ''}`}
-      onClick={onClick}
-    >
-      <div className="avatar bg-warm-100">
-        <span>{person.emoji || '👤'}</span>
-      </div>
-      <div className="info">
-        <div className="name">{person.nickname || person.name}</div>
-        {/* Show group/channel association - subtle gray */}
-        {showGroup && person.group_name && person.type !== 'family' && (
-          <div className="text-xs text-warm-400 flex items-center gap-1">
-            <span>{person.group_emoji || '📺'}</span>
-            <span>{person.group_name}</span>
-          </div>
-        )}
-        <div className="meta flex items-center gap-1">
-          <Cake className="w-3 h-3" />
-          {formatDate(person.birthday)}
+    <>
+      <div
+        className={`item-row ${isHighlight ? 'highlight' : ''} ${onClick ? 'cursor-pointer hover:bg-warm-50' : ''}`}
+        onClick={onClick}
+        {...longPressHandlers}
+      >
+        <div className="avatar bg-warm-100">
+          <span>{person.emoji || '👤'}</span>
         </div>
-        {showStatus && person.left_date && (
-          <div className="text-xs text-warm-400">(left group)</div>
-        )}
+        <div className="info">
+          <div className="name flex items-center gap-1">
+            {person.nickname || person.name}
+            {person.isFavorite && <Heart className="w-3 h-3 fill-coral text-coral" />}
+          </div>
+          {/* Show group/channel association - subtle gray */}
+          {showGroup && person.group_name && person.type !== 'family' && (
+            <div className="text-xs text-warm-400 flex items-center gap-1">
+              <span>{person.group_emoji || '📺'}</span>
+              <span>{person.group_name}</span>
+            </div>
+          )}
+          <div className="meta flex items-center gap-1">
+            <Cake className="w-3 h-3" />
+            {formatDate(person.birthday)}
+          </div>
+          {showStatus && person.left_date && (
+            <div className="text-xs text-warm-400">(left group)</div>
+          )}
+        </div>
+        {/* Consistent neutral age badge */}
+        <span className="age-badge bg-sienna-400 text-white">{age}</span>
+        {onClick && <ChevronRight className="w-4 h-4 text-warm-300" />}
       </div>
-      {/* Consistent neutral age badge */}
-      <span className="age-badge bg-sienna-400 text-white">{age}</span>
-      {onClick && <ChevronRight className="w-4 h-4 text-warm-300" />}
-      {showHeart && onToggleFavorite && (
-        <HeartButton
-          isFavorite={person.isFavorite}
-          onToggle={(e) => { e?.stopPropagation(); onToggleFavorite(person.id) }}
+
+      {/* Context menu */}
+      {menuPos && (
+        <PersonContextMenu
+          person={person}
+          position={menuPos}
+          onClose={() => setMenuPos(null)}
+          onToggleFavorite={onToggleFavorite}
+          onViewProfile={onViewProfile}
         />
       )}
-    </div>
+    </>
   )
 }
 
-function Pill({ item, selected, onClick, onToggleFavorite }) {
+function Pill({ item, selected, onClick, onToggleFavorite, onViewProfile }) {
+  const [menuPos, setMenuPos] = useState(null)
+  const longPressHandlers = useLongPress((pos) => setMenuPos(pos))
+
   return (
-    <div className="relative inline-flex">
-      <button onClick={onClick} className={`pill ${selected ? 'selected' : ''}`}>
+    <>
+      <button
+        onClick={onClick}
+        {...longPressHandlers}
+        className={`pill ${selected ? 'selected' : ''}`}
+      >
         <span className="emoji">{item.emoji || '📌'}</span>
         <span>{item.nickname || item.name}</span>
         {item.isFavorite && !selected && (
           <Heart className="w-3 h-3 fill-coral text-coral" />
         )}
       </button>
-      {/* Tap heart to unfavorite */}
-      {onToggleFavorite && item.isFavorite && (
-        <button
-          onClick={(e) => { e.stopPropagation(); onToggleFavorite(item.id); }}
-          className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-white shadow flex items-center justify-center border border-warm-100 active:scale-90"
-        >
-          <Heart className="w-3 h-3 fill-coral text-coral" />
-        </button>
+      {menuPos && (
+        <PersonContextMenu
+          person={item}
+          position={menuPos}
+          onClose={() => setMenuPos(null)}
+          onToggleFavorite={onToggleFavorite}
+          onViewProfile={onViewProfile}
+        />
       )}
-    </div>
+    </>
   )
 }
 
@@ -638,7 +658,10 @@ function CategoryButton({ label, count, isActive, onClick }) {
 }
 
 // Scrollable person picker for accessibility - neutral colors
-function PersonPicker({ people, selected, onToggle, onToggleFavorite, title }) {
+// Long-press or right-click for context menu
+function PersonPicker({ people, selected, onToggle, onToggleFavorite, onViewProfile, title }) {
+  const [menuState, setMenuState] = useState({ person: null, position: null })
+
   if (people.length === 0) return null
 
   return (
@@ -650,38 +673,58 @@ function PersonPicker({ people, selected, onToggle, onToggleFavorite, title }) {
         {people.map(p => {
           const isSelected = selected.includes(p.id)
           return (
-            <div key={p.id} className="flex-shrink-0 relative">
-              <button
-                onClick={() => onToggle(p.id)}
-                className={`
-                  flex flex-col items-center gap-1 p-3 min-w-[70px]
-                  rounded-xl border-2 transition-all duration-200 active:scale-95
-                  ${isSelected
-                    ? 'bg-sienna-500 text-white border-sienna-500 shadow-md'
-                    : 'bg-white text-warm-600 border-warm-200 hover:border-warm-300'
-                  }
-                `}
-              >
-                <span className="text-2xl">{p.emoji || '👤'}</span>
-                <span className="text-xs font-medium truncate max-w-[60px]">
-                  {p.nickname || p.name?.split(' ')[0]}
-                </span>
-                {isSelected && <span className="text-[10px]">✓</span>}
-              </button>
-              {/* Favorite heart in corner */}
-              {onToggleFavorite && (
-                <button
-                  onClick={(e) => { e.stopPropagation(); onToggleFavorite(p.id); }}
-                  className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center border border-warm-100 active:scale-90 transition-transform"
-                >
-                  <Heart className={`w-3.5 h-3.5 ${p.isFavorite ? 'fill-coral text-coral' : 'text-warm-300'}`} />
-                </button>
-              )}
-            </div>
+            <PersonPickerCard
+              key={p.id}
+              person={p}
+              isSelected={isSelected}
+              onToggle={() => onToggle(p.id)}
+              onLongPress={(pos) => setMenuState({ person: p, position: pos })}
+            />
           )
         })}
       </div>
+
+      {/* Context menu */}
+      {menuState.person && (
+        <PersonContextMenu
+          person={menuState.person}
+          position={menuState.position}
+          onClose={() => setMenuState({ person: null, position: null })}
+          onToggleFavorite={onToggleFavorite}
+          onViewProfile={onViewProfile}
+        />
+      )}
     </div>
+  )
+}
+
+// Individual card with long-press support
+function PersonPickerCard({ person, isSelected, onToggle, onLongPress }) {
+  const longPressHandlers = useLongPress(onLongPress)
+
+  return (
+    <button
+      onClick={onToggle}
+      {...longPressHandlers}
+      className={`
+        flex-shrink-0 flex flex-col items-center gap-1 p-3 min-w-[70px]
+        rounded-xl border-2 transition-all duration-200 active:scale-95
+        ${isSelected
+          ? 'bg-sienna-500 text-white border-sienna-500 shadow-md'
+          : 'bg-white text-warm-600 border-warm-200 hover:border-warm-300'
+        }
+      `}
+    >
+      <span className="text-2xl">{person.emoji || '👤'}</span>
+      <span className="text-xs font-medium truncate max-w-[60px]">
+        {person.nickname || person.name?.split(' ')[0]}
+      </span>
+      {isSelected && <span className="text-[10px]">✓</span>}
+      {/* Small heart indicator if favorite */}
+      {person.isFavorite && !isSelected && (
+        <Heart className="w-3 h-3 fill-coral text-coral absolute top-1 right-1" />
+      )}
+    </button>
   )
 }
 
