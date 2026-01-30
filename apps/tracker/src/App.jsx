@@ -18,10 +18,11 @@ import {
 } from 'lucide-react'
 
 // ============ HELPERS ============
-function calcAge(birthday, atDate = new Date()) {
+function calcAge(birthday, atDate) {
   if (!birthday) return null
   const birth = new Date(birthday)
-  const at = new Date(atDate)
+  // Handle null/undefined atDate - use today
+  const at = atDate ? new Date(atDate) : new Date()
   let age = at.getFullYear() - birth.getFullYear()
   const monthDiff = at.getMonth() - birth.getMonth()
   if (monthDiff < 0 || (monthDiff === 0 && at.getDate() < birth.getDate())) age--
@@ -694,8 +695,8 @@ function SongsPage({ works, people, family, onToggleFavorite, onSelectSong, load
                 </div>
                 <div className="flex-1 text-white">
                   <div className="font-bold text-lg">{album.name}</div>
-                  <div className="opacity-90 text-sm">{formatDate(album.release_date)}</div>
-                  {album.note && <div className="text-sm mt-1">{album.note}</div>}
+                  <div className="opacity-90 text-sm">Album • {formatDate(album.release_date)}</div>
+                  <div className="text-sm mt-1 opacity-80">Tap to see who was in the band!</div>
                 </div>
                 <ChevronRight className="w-6 h-6 text-white" />
               </div>
