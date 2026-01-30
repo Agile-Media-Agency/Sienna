@@ -422,25 +422,24 @@ function SongDetailView({ song, people, family, onBack }) {
 
 // ============ PAGES ============
 
-// Big accessible category button - calming neutral colors
-function CategoryButton({ emoji, label, count, isActive, onClick }) {
+// Simple horizontal pill button - clean and readable
+function CategoryButton({ label, count, isActive, onClick }) {
   return (
     <button
       onClick={onClick}
       className={`
-        flex flex-col items-center justify-center gap-1 p-3 min-w-[80px] min-h-[70px]
-        rounded-2xl font-medium border-2 transition-all duration-200
-        active:scale-95
+        flex items-center gap-2 px-4 py-2 whitespace-nowrap
+        rounded-full font-medium border-2 transition-all duration-200
+        active:scale-95 text-sm
         ${isActive
           ? 'bg-sienna-500 text-white border-sienna-500 shadow-md'
           : 'bg-white text-warm-600 border-warm-200 hover:border-warm-300 hover:bg-warm-50'
         }
       `}
     >
-      <span className="text-2xl">{emoji}</span>
-      <span className="text-xs">{label}</span>
+      <span>{label}</span>
       {count > 0 && (
-        <span className={`text-[10px] px-2 py-0.5 rounded-full ${isActive ? 'bg-white/30' : 'bg-warm-100'}`}>
+        <span className={`text-xs px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/30' : 'bg-warm-100'}`}>
           {count}
         </span>
       )}
@@ -618,32 +617,26 @@ function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }
           <Users className="w-3 h-3" /> Browse People
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          {/* Family always first */}
           <CategoryButton
-            emoji="👨‍👩‍👧‍👦"
             label="Family"
             count={familyMembers.length}
             isActive={showPeoplePicker === 'family'}
             onClick={() => setShowPeoplePicker(showPeoplePicker === 'family' ? null : 'family')}
           />
-          {/* Show actual groups */}
           {groups.map(g => {
             const groupPeople = getPeopleInGroup(g.id)
             if (groupPeople.length === 0) return null
             return (
               <CategoryButton
                 key={g.id}
-                emoji={g.emoji || '👥'}
-                label={g.name.length > 10 ? g.name.substring(0, 10) + '…' : g.name}
+                label={g.name}
                 count={groupPeople.length}
                 isActive={showPeoplePicker === g.id}
                 onClick={() => setShowPeoplePicker(showPeoplePicker === g.id ? null : g.id)}
               />
             )
           })}
-          {/* Everyone fallback */}
           <CategoryButton
-            emoji="👥"
             label="Everyone"
             count={people.length}
             isActive={showPeoplePicker === 'all'}
@@ -700,14 +693,12 @@ function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }
         </div>
         <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
           <CategoryButton
-            emoji="📆"
             label="Today"
             isActive={!selectedEvent && selectedDate === new Date().toISOString().split('T')[0]}
             onClick={selectToday}
           />
           {attendedEvents.length > 0 && (
             <CategoryButton
-              emoji="🎤"
               label="Concerts"
               count={attendedEvents.length}
               isActive={showEventPicker === 'attended'}
@@ -716,7 +707,6 @@ function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }
           )}
           {favEvents.length > 0 && (
             <CategoryButton
-              emoji="⭐"
               label="Favorites"
               count={favEvents.length}
               isActive={showEventPicker === 'favorites'}
@@ -724,7 +714,6 @@ function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }
             />
           )}
           <CategoryButton
-            emoji="📅"
             label="All Events"
             count={events.length}
             isActive={showEventPicker === 'all'}
