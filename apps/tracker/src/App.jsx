@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useRef } from 'react'
 import {
   Heart,
   Search,
@@ -14,7 +14,10 @@ import {
   ArrowLeft,
   Disc3,
   Instagram,
-  MapPin
+  MapPin,
+  User,
+  Link,
+  X
 } from 'lucide-react'
 
 // ============ HELPERS ============
@@ -152,6 +155,121 @@ function HeartButton({ isFavorite, onToggle }) {
       />
     </button>
   )
+}
+
+// Context menu for long-press (mobile) / right-click (desktop)
+function PersonContextMenu({ person, position, onClose, onToggleFavorite, onViewProfile }) {
+  const menuRef = useRef(null)
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        onClose()
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    document.addEventListener('touchstart', handleClickOutside)
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+      document.removeEventListener('touchstart', handleClickOutside)
+    }
+  }, [onClose])
+
+  if (!position) return null
+
+  return (
+    <div
+      ref={menuRef}
+      className="fixed z-50 bg-white rounded-xl shadow-xl border border-warm-200 overflow-hidden min-w-[180px] animate-fade-in"
+      style={{
+        left: Math.min(position.x, window.innerWidth - 200),
+        top: Math.min(position.y, window.innerHeight - 200)
+      }}
+    >
+      {/* Header */}
+      <div className="px-3 py-2 bg-warm-50 border-b border-warm-100 flex items-center gap-2">
+        <span className="text-lg">{person.emoji || '👤'}</span>
+        <span className="font-medium text-warm-700 truncate">{person.nickname || person.name}</span>
+      </div>
+
+      {/* Options */}
+      <div className="py-1">
+        {onViewProfile && (
+          <button
+            onClick={() => { onViewProfile(person); onClose(); }}
+            className="w-full px-3 py-2 text-left flex items-center gap-3 hover:bg-warm-50 active:bg-warm-100"
+          >
+            <User className="w-4 h-4 text-warm-500" />
+            <span>View Profile</span>
+          </button>
+        )}
+
+        {onToggleFavorite && (
+          <button
+            onClick={() => { onToggleFavorite(person.id); onClose(); }}
+            className="w-full px-3 py-2 text-left flex items-center gap-3 hover:bg-warm-50 active:bg-warm-100"
+          >
+            <Heart className={`w-4 h-4 ${person.isFavorite ? 'fill-coral text-coral' : 'text-warm-500'}`} />
+            <span>{person.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}</span>
+          </button>
+        )}
+
+        {person.group_name && (
+          <button
+            onClick={onClose}
+            className="w-full px-3 py-2 text-left flex items-center gap-3 hover:bg-warm-50 active:bg-warm-100"
+          >
+            <Link className="w-4 h-4 text-warm-500" />
+            <span className="truncate">{person.group_emoji} {person.group_name}</span>
+          </button>
+        )}
+      </div>
+
+      {/* Cancel */}
+      <div className="border-t border-warm-100">
+        <button
+          onClick={onClose}
+          className="w-full px-3 py-2 text-center text-warm-500 hover:bg-warm-50 active:bg-warm-100"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  )
+}
+
+// Hook to handle long press
+function useLongPress(callback, ms = 500) {
+  const timerRef = useRef(null)
+  const callbackRef = useRef(callback)
+  callbackRef.current = callback
+
+  const start = (e) => {
+    e.preventDefault()
+    timerRef.current = setTimeout(() => {
+      const touch = e.touches?.[0] || e
+      callbackRef.current({ x: touch.clientX, y: touch.clientY })
+    }, ms)
+  }
+
+  const stop = () => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current)
+      timerRef.current = null
+    }
+  }
+
+  return {
+    onMouseDown: start,
+    onMouseUp: stop,
+    onMouseLeave: stop,
+    onTouchStart: start,
+    onTouchEnd: stop,
+    onContextMenu: (e) => {
+      e.preventDefault()
+      callbackRef.current({ x: e.clientX, y: e.clientY })
+    }
+  }
 }
 
 function PersonRow({ person, showHeart = true, onToggleFavorite, dateForAge = null, onClick, showStatus = false, showGroup = true }) {
