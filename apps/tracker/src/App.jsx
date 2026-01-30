@@ -527,6 +527,7 @@ function EventPicker({ events, selectedDate, onSelectEvent, title }) {
 function TimelinePage({ people, events, onToggleFavorite, loading }) {
   const [selected, setSelected] = useState([])
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
+  const [selectedEvent, setSelectedEvent] = useState(null) // Track the actual event object
   const [showPeoplePicker, setShowPeoplePicker] = useState(null) // 'family' | 'band' | 'all' | null
   const [showEventPicker, setShowEventPicker] = useState(false)
 
@@ -568,9 +569,16 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
 
   const selectEvent = (event) => {
     setSelectedDate(event.date)
+    setSelectedEvent(event) // Store the whole event so we can show its name/emoji
     // Auto-add family when selecting an event
     const familyIds = familyMembers.map(p => p.id)
     setSelected(prev => [...new Set([...prev, ...familyIds])])
+    setShowEventPicker(false)
+  }
+
+  const selectToday = () => {
+    setSelectedDate(new Date().toISOString().split('T')[0])
+    setSelectedEvent(null) // Clear event when selecting "Today"
     setShowEventPicker(false)
   }
 
@@ -716,11 +724,8 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
             emoji="📆"
             label="Today"
             color="green"
-            isActive={selectedDate === new Date().toISOString().split('T')[0] && !showEventPicker}
-            onClick={() => {
-              setSelectedDate(new Date().toISOString().split('T')[0])
-              setShowEventPicker(false)
-            }}
+            isActive={!selectedEvent && selectedDate === new Date().toISOString().split('T')[0]}
+            onClick={selectToday}
           />
           {attendedEvents.length > 0 && (
             <CategoryButton
@@ -774,12 +779,35 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
         </div>
       )}
 
+      {/* Selected Event Banner - Shows what event is selected */}
+      {selectedEvent && (
+        <div className="card mb-4 bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+          <div className="flex items-center gap-3">
+            <div className="text-4xl">{selectedEvent.emoji || '📅'}</div>
+            <div className="flex-1">
+              <div className="font-bold text-lg">{selectedEvent.name}</div>
+              <div className="text-purple-200 text-sm">{formatDate(selectedEvent.date)}</div>
+            </div>
+            <button
+              onClick={selectToday}
+              className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-full text-sm font-medium transition-colors"
+            >
+              × Clear
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Results - Ages on selected date */}
       {selectedPeople.length > 0 ? (
         <div className="card bg-gradient-to-br from-sienna-50 to-white">
           <div className="card-header">
             <Cake className="w-5 h-5 text-sienna-500" />
-            Ages on {formatDate(selectedDate)}
+            {selectedEvent ? (
+              <span>Ages at <strong>{selectedEvent.name}</strong></span>
+            ) : (
+              <span>Ages on {formatDate(selectedDate)}</span>
+            )}
           </div>
           <div className="space-y-1">
             {selectedPeople
@@ -799,7 +827,7 @@ function TimelinePage({ people, events, onToggleFavorite, loading }) {
             onClick={() => setSelected([])}
             className="w-full mt-3 py-2 text-sm text-warm-500 hover:text-warm-700 font-medium"
           >
-            Clear All
+            Clear All People
           </button>
         </div>
       ) : (
