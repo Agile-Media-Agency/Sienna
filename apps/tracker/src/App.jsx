@@ -196,15 +196,26 @@ function PersonRow({ person, showHeart = true, onToggleFavorite, dateForAge = nu
   )
 }
 
-function Pill({ item, selected, onClick }) {
+function Pill({ item, selected, onClick, onToggleFavorite }) {
   return (
-    <button onClick={onClick} className={`pill ${selected ? 'selected' : ''}`}>
-      <span className="emoji">{item.emoji || '📌'}</span>
-      <span>{item.nickname || item.name}</span>
-      {item.isFavorite && !selected && (
-        <Heart className="w-3 h-3 fill-coral text-coral" />
+    <div className="relative inline-flex">
+      <button onClick={onClick} className={`pill ${selected ? 'selected' : ''}`}>
+        <span className="emoji">{item.emoji || '📌'}</span>
+        <span>{item.nickname || item.name}</span>
+        {item.isFavorite && !selected && (
+          <Heart className="w-3 h-3 fill-coral text-coral" />
+        )}
+      </button>
+      {/* Tap heart to unfavorite */}
+      {onToggleFavorite && item.isFavorite && (
+        <button
+          onClick={(e) => { e.stopPropagation(); onToggleFavorite(item.id); }}
+          className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-white shadow flex items-center justify-center border border-warm-100 active:scale-90"
+        >
+          <Heart className="w-3 h-3 fill-coral text-coral" />
+        </button>
       )}
-    </button>
+    </div>
   )
 }
 
@@ -509,7 +520,7 @@ function CategoryButton({ label, count, isActive, onClick }) {
 }
 
 // Scrollable person picker for accessibility - neutral colors
-function PersonPicker({ people, selected, onToggle, title }) {
+function PersonPicker({ people, selected, onToggle, onToggleFavorite, title }) {
   if (people.length === 0) return null
 
   return (
@@ -521,24 +532,34 @@ function PersonPicker({ people, selected, onToggle, title }) {
         {people.map(p => {
           const isSelected = selected.includes(p.id)
           return (
-            <button
-              key={p.id}
-              onClick={() => onToggle(p.id)}
-              className={`
-                flex-shrink-0 flex flex-col items-center gap-1 p-3 min-w-[70px]
-                rounded-xl border-2 transition-all duration-200 active:scale-95
-                ${isSelected
-                  ? 'bg-sienna-500 text-white border-sienna-500 shadow-md'
-                  : 'bg-white text-warm-600 border-warm-200 hover:border-warm-300'
-                }
-              `}
-            >
-              <span className="text-2xl">{p.emoji || '👤'}</span>
-              <span className="text-xs font-medium truncate max-w-[60px]">
-                {p.nickname || p.name?.split(' ')[0]}
-              </span>
-              {isSelected && <span className="text-[10px]">✓</span>}
-            </button>
+            <div key={p.id} className="flex-shrink-0 relative">
+              <button
+                onClick={() => onToggle(p.id)}
+                className={`
+                  flex flex-col items-center gap-1 p-3 min-w-[70px]
+                  rounded-xl border-2 transition-all duration-200 active:scale-95
+                  ${isSelected
+                    ? 'bg-sienna-500 text-white border-sienna-500 shadow-md'
+                    : 'bg-white text-warm-600 border-warm-200 hover:border-warm-300'
+                  }
+                `}
+              >
+                <span className="text-2xl">{p.emoji || '👤'}</span>
+                <span className="text-xs font-medium truncate max-w-[60px]">
+                  {p.nickname || p.name?.split(' ')[0]}
+                </span>
+                {isSelected && <span className="text-[10px]">✓</span>}
+              </button>
+              {/* Favorite heart in corner */}
+              {onToggleFavorite && (
+                <button
+                  onClick={(e) => { e.stopPropagation(); onToggleFavorite(p.id); }}
+                  className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-white shadow-md flex items-center justify-center border border-warm-100 active:scale-90 transition-transform"
+                >
+                  <Heart className={`w-3.5 h-3.5 ${p.isFavorite ? 'fill-coral text-coral' : 'text-warm-300'}`} />
+                </button>
+              )}
+            </div>
           )
         })}
       </div>
@@ -666,6 +687,7 @@ function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }
                 item={p}
                 selected={selected.includes(p.id)}
                 onClick={() => togglePerson(p.id)}
+                onToggleFavorite={onToggleFavorite}
               />
             ))}
           </div>
@@ -740,7 +762,7 @@ function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }
                     </button>
                   </div>
                 </div>
-                <PersonPicker people={pickerPeople} selected={selected} onToggle={togglePerson} title="Tap to add" />
+                <PersonPicker people={pickerPeople} selected={selected} onToggle={togglePerson} onToggleFavorite={onToggleFavorite} title="Tap to add" />
               </>
             )
           })()}
@@ -841,7 +863,8 @@ function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }
                 <PersonRow
                   key={p.id}
                   person={p}
-                  showHeart={false}
+                  showHeart={true}
+                  onToggleFavorite={onToggleFavorite}
                   dateForAge={selectedDate}
                 />
               ))}
