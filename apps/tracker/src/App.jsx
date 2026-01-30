@@ -113,9 +113,19 @@ function getColorForType(type) {
 
 function NavButton({ label, icon: Icon, active, onClick }) {
   return (
-    <button onClick={onClick} className={`nav-btn ${active ? 'active' : ''}`}>
-      <Icon className="w-5 h-5" />
-      <span className="text-xs">{label}</span>
+    <button
+      onClick={onClick}
+      className={`
+        flex flex-col items-center justify-center gap-1 py-2 px-3 min-w-[60px]
+        rounded-2xl font-medium transition-all duration-200
+        ${active
+          ? 'bg-sienna-500 text-white shadow-lg scale-105'
+          : 'text-warm-500 hover:text-sienna-600 hover:bg-sienna-50'
+        }
+      `}
+    >
+      <Icon className={`w-5 h-5 ${active ? '' : 'opacity-70'}`} />
+      <span className="text-[11px]">{label}</span>
     </button>
   )
 }
@@ -1152,8 +1162,8 @@ export default function App() {
         {renderPage()}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-sienna-100 p-2 safe-bottom">
-        <div className="flex justify-around max-w-md mx-auto">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-sienna-100 safe-bottom shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
+        <div className="flex justify-around items-center max-w-md mx-auto px-2 py-2">
           <NavButton
             label="Timeline"
             icon={Clock}
