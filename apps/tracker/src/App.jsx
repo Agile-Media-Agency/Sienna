@@ -54,7 +54,9 @@ async function fetchEvents() {
     ...e,
     name: e.title || e.name,  // Map title -> name for display
     isFavorite: e.is_favorite === 1,
-    attended: e.attended === 1  // Convert to boolean
+    attended: e.attended === 1,  // Convert to boolean
+    group_id: e.group_id,
+    description: e.description
   }))
 }
 
@@ -407,8 +409,66 @@ function EventsPage({ events, onToggleFavorite, loading }) {
   )
 }
 
-function GroupsPage({ groups, onToggleFavorite, loading }) {
+function GroupsPage({ groups, events, onToggleFavorite, loading }) {
+  const [selectedGroup, setSelectedGroup] = useState(null)
+
   if (loading) return <LoadingSpinner />
+
+  // Show group detail view
+  if (selectedGroup) {
+    const groupEvents = events.filter(e => e.group_id === selectedGroup.id)
+    return (
+      <div className="p-4 pb-24 animate-fade-in">
+        <button
+          onClick={() => setSelectedGroup(null)}
+          className="mb-4 px-4 py-2 bg-sienna-500 text-white rounded-full font-medium text-sm"
+        >
+          ← Back
+        </button>
+
+        {/* Group Header */}
+        <div className="card bg-gradient-to-br from-pink-100 to-white mb-4">
+          <div className="text-center py-4">
+            <div className="text-5xl mb-2">{selectedGroup.emoji || '🎵'}</div>
+            <h2 className="text-2xl font-display font-bold text-sienna-700">{selectedGroup.name}</h2>
+            <p className="text-sienna-500 capitalize">{selectedGroup.type}</p>
+            {selectedGroup.description && (
+              <p className="text-sm text-warm-500 mt-2">{selectedGroup.description}</p>
+            )}
+            {selectedGroup.start_date && (
+              <p className="text-xs text-warm-400 mt-2">
+                {formatDate(selectedGroup.start_date)} - {selectedGroup.end_date ? formatDate(selectedGroup.end_date) : 'Present'}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Group Events/Timeline */}
+        {groupEvents.length > 0 && (
+          <div className="card">
+            <div className="card-header">
+              <Calendar className="w-5 h-5 text-sienna-500" />
+              Timeline
+            </div>
+            <div className="space-y-1">
+              {groupEvents.sort((a, b) => new Date(a.date) - new Date(b.date)).map(e => (
+                <div key={e.id} className="item-row">
+                  <div className="avatar">
+                    <span>{e.emoji || '📅'}</span>
+                  </div>
+                  <div className="info">
+                    <div className="name">{e.name}</div>
+                    <div className="meta">{formatDate(e.date)}</div>
+                    {e.description && <div className="text-xs text-warm-400">{e.description}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    )
+  }
 
   return (
     <div className="p-4 pb-24 animate-fade-in">
@@ -416,12 +476,16 @@ function GroupsPage({ groups, onToggleFavorite, loading }) {
         <Music className="w-6 h-6" />
         Groups & Shows
       </h1>
-      
+
       <div className="card">
         {groups.length > 0 ? (
           <div className="space-y-1">
             {groups.map(g => (
-              <div key={g.id} className="item-row">
+              <div
+                key={g.id}
+                className="item-row cursor-pointer hover:bg-sienna-50"
+                onClick={() => setSelectedGroup(g)}
+              >
                 <div className="avatar">
                   <span>{g.emoji || '🎵'}</span>
                 </div>
@@ -430,9 +494,9 @@ function GroupsPage({ groups, onToggleFavorite, loading }) {
                   <div className="meta capitalize">{g.type}</div>
                 </div>
                 <ChevronRight className="w-5 h-5 text-warm-300" />
-                <HeartButton 
-                  isFavorite={g.isFavorite} 
-                  onToggle={() => onToggleFavorite(g.id)} 
+                <HeartButton
+                  isFavorite={g.isFavorite}
+                  onToggle={(e) => { e.stopPropagation(); onToggleFavorite(g.id) }}
                 />
               </div>
             ))}
@@ -513,8 +577,9 @@ export default function App() {
           loading={loading}
         />
       case 'groups':
-        return <GroupsPage 
-          groups={data.groups} 
+        return <GroupsPage
+          groups={data.groups}
+          events={data.events}
           onToggleFavorite={(id) => toggleFavorite('groups', id)}
           loading={loading}
         />
