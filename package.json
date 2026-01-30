@@ -11,8 +11,5 @@
     "dev": "echo Choose an app, e.g.: npm --workspace=@sienna/age-comparison run dev",
     "build": "echo Choose an app, e.g.: npm --workspace=@sienna/age-comparison run build",
     "lint": "echo Implement linting per app/package"
-  },
-  "devDependencies": {
-    "@rollup/rollup-linux-arm64-gnu": "^4.57.0"
   }
 }
