@@ -32,11 +32,19 @@ function formatDate(dateStr) {
 async function fetchPeople() {
   const res = await fetch('/api/people')
   const data = await res.json()
-  return data.map(p => ({
-    ...p,
-    isFavorite: p.is_favorite === 1,
-    color: getColorForType(p.type)
-  }))
+  return data.map(p => {
+    // Derive type from tags (e.g., "Family" -> "family", "Musician" -> "musician")
+    const type = p.tags?.toLowerCase().includes('family') ? 'family'
+               : p.tags?.toLowerCase().includes('youtuber') ? 'youtuber'
+               : p.tags?.toLowerCase().includes('musician') ? 'musician'
+               : 'other'
+    return {
+      ...p,
+      type,
+      isFavorite: p.is_favorite === 1,
+      color: getColorForType(type)
+    }
+  })
 }
 
 async function fetchEvents() {
@@ -44,7 +52,9 @@ async function fetchEvents() {
   const data = await res.json()
   return data.map(e => ({
     ...e,
-    isFavorite: e.is_favorite === 1
+    name: e.title || e.name,  // Map title -> name for display
+    isFavorite: e.is_favorite === 1,
+    attended: e.attended === 1  // Convert to boolean
   }))
 }
 
