@@ -424,22 +424,25 @@ function SongDetailView({ song, people, family, onBack }) {
 
 // Simple horizontal pill button - clean and readable
 function CategoryButton({ label, count, isActive, onClick }) {
+  // Truncate long labels for better display
+  const shortLabel = label.length > 10 ? label.substring(0, 9) + '…' : label
   return (
     <button
       onClick={onClick}
       className={`
-        flex items-center gap-2 px-4 py-2 whitespace-nowrap
+        flex items-center gap-1.5 px-3 py-2
         rounded-full font-medium border-2 transition-all duration-200
-        active:scale-95 text-sm
+        active:scale-95 text-sm max-w-[120px]
         ${isActive
           ? 'bg-sienna-500 text-white border-sienna-500 shadow-md'
           : 'bg-white text-warm-600 border-warm-200 hover:border-warm-300 hover:bg-warm-50'
         }
       `}
+      title={label}
     >
-      <span>{label}</span>
+      <span className="truncate">{shortLabel}</span>
       {count > 0 && (
-        <span className={`text-xs px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/30' : 'bg-warm-100'}`}>
+        <span className={`text-xs px-1.5 py-0.5 rounded-full flex-shrink-0 ${isActive ? 'bg-white/30' : 'bg-warm-100'}`}>
           {count}
         </span>
       )}
@@ -960,7 +963,41 @@ function SongsPage({ works, people, family, onToggleFavorite, onSelectSong, load
   if (loading) return <LoadingSpinner />
 
   const albums = works.filter(w => w.type === 'album')
-  const singles = works.filter(w => w.type === 'single')
+  // Include singles AND songs (individual tracks)
+  const allSongs = works.filter(w => w.type === 'single' || w.type === 'song')
+
+  // Group songs by their group_id for better organization
+  const songsByGroup = {}
+  allSongs.forEach(song => {
+    const groupId = song.group_id || 'other'
+    if (!songsByGroup[groupId]) {
+      songsByGroup[groupId] = []
+    }
+    songsByGroup[groupId].push(song)
+  })
+
+  // Get group names for display (using actual database group_ids)
+  const groupNames = {
+    'xomgpop': 'XOMG POP!',
+    'sharer-fam': 'Stephen Sharer',
+    'spy-ninjas': 'Spy Ninjas',
+    'fun-squad': 'Ninja Kidz',
+    'kidz-bop': 'Kidz Bop',
+    'ninja-kidz': 'Ninja Kidz',
+    'stephen-sharer': 'Stephen Sharer',
+    'other': 'Other Songs'
+  }
+
+  const groupColors = {
+    'xomgpop': 'from-pink-400 to-purple-500',
+    'sharer-fam': 'from-blue-400 to-cyan-500',
+    'spy-ninjas': 'from-red-500 to-orange-500',
+    'fun-squad': 'from-green-500 to-emerald-500',
+    'kidz-bop': 'from-yellow-400 to-orange-400',
+    'ninja-kidz': 'from-green-500 to-emerald-500',
+    'stephen-sharer': 'from-blue-400 to-cyan-500',
+    'other': 'from-gray-400 to-gray-500'
+  }
 
   return (
     <div className="p-4 pb-24 animate-fade-in">
@@ -975,7 +1012,7 @@ function SongsPage({ works, people, family, onToggleFavorite, onSelectSong, load
           {albums.map(album => (
             <div
               key={album.id}
-              className="card cursor-pointer hover:shadow-lg transition-shadow"
+              className="card cursor-pointer hover:shadow-lg transition-shadow mb-3"
               style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)' }}
               onClick={() => onSelectSong(album)}
             >
@@ -995,31 +1032,41 @@ function SongsPage({ works, people, family, onToggleFavorite, onSelectSong, load
         </div>
       )}
 
-      {/* Singles */}
-      <div className="card">
-        <div className="card-header">
-          <Music className="w-5 h-5 text-sienna-500" />
-          Singles
-        </div>
-        <div className="space-y-1">
-          {singles.map(song => (
-            <div
-              key={song.id}
-              className="item-row cursor-pointer hover:bg-sienna-50"
-              onClick={() => onSelectSong(song)}
-            >
-              <div className="avatar bg-pink-100">
-                <span>{song.emoji || '🎵'}</span>
+      {/* Songs grouped by artist/band */}
+      {Object.keys(songsByGroup).map(groupId => (
+        <div key={groupId} className="card mb-4">
+          <div className={`card-header bg-gradient-to-r ${groupColors[groupId] || groupColors.other} text-white rounded-t-xl -mx-4 -mt-4 px-4 py-3 mb-3`}>
+            <Music className="w-5 h-5" />
+            {groupNames[groupId] || groupId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+            <span className="ml-auto text-sm opacity-80">{songsByGroup[groupId].length} songs</span>
+          </div>
+          <div className="space-y-1">
+            {songsByGroup[groupId].map(song => (
+              <div
+                key={song.id}
+                className="item-row cursor-pointer hover:bg-sienna-50"
+                onClick={() => onSelectSong(song)}
+              >
+                <div className="avatar bg-pink-100">
+                  <span>{song.emoji || '🎵'}</span>
+                </div>
+                <div className="info">
+                  <div className="name">{song.name}</div>
+                  <div className="meta">{formatDate(song.release_date)}</div>
+                </div>
+                <ChevronRight className="w-5 h-5 text-warm-300" />
               </div>
-              <div className="info">
-                <div className="name">{song.name}</div>
-                <div className="meta">{formatDate(song.release_date)}</div>
-              </div>
-              <ChevronRight className="w-5 h-5 text-warm-300" />
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
-      </div>
+      ))}
+
+      {/* Show message if no songs */}
+      {albums.length === 0 && allSongs.length === 0 && (
+        <div className="text-center text-warm-500 py-8">
+          No songs yet!
+        </div>
+      )}
     </div>
   )
 }
