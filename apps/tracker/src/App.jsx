@@ -117,6 +117,239 @@ function getColorForType(type) {
 
 // ============ COMPONENTS ============
 
+// Global Search/Browse component
+function GlobalSearch({ people, groups, works, events, onSelectPerson, onSelectSong, onSelectGroup, onClose }) {
+  const [query, setQuery] = useState('')
+  const [category, setCategory] = useState('all')
+  const [letter, setLetter] = useState(null)
+  const inputRef = useRef(null)
+
+  useEffect(() => {
+    inputRef.current?.focus()
+  }, [])
+
+  const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
+
+  // Filter by category
+  const getFilteredItems = () => {
+    let items = []
+
+    // Add people
+    if (category === 'all' || category === 'people' || category === 'family' || category === 'bands' || category === 'youtube') {
+      people.forEach(p => {
+        const catMatch = category === 'all' || category === 'people' ||
+          (category === 'family' && p.type === 'family') ||
+          (category === 'bands' && p.group_type === 'band') ||
+          (category === 'youtube' && p.group_type === 'youtube')
+        if (catMatch) {
+          items.push({
+            type: 'person',
+            id: p.id,
+            name: p.nickname || p.name,
+            fullName: p.name,
+            emoji: p.emoji || '👤',
+            context: p.group_name || (p.type === 'family' ? 'Family' : ''),
+            contextEmoji: p.group_emoji || (p.type === 'family' ? '👨‍👩‍👧' : ''),
+            data: p
+          })
+        }
+      })
+    }
+
+    // Add groups
+    if (category === 'all' || category === 'groups') {
+      groups.forEach(g => {
+        items.push({
+          type: 'group',
+          id: g.id,
+          name: g.name,
+          emoji: g.emoji || '🎵',
+          context: g.type,
+          data: g
+        })
+      })
+    }
+
+    // Add songs
+    if (category === 'all' || category === 'songs') {
+      works.filter(w => !w.parent_id).forEach(w => {
+        const group = groups.find(g => g.id === w.group_id)
+        items.push({
+          type: 'song',
+          id: w.id,
+          name: w.name,
+          emoji: w.emoji || '🎵',
+          context: group?.name || w.type,
+          data: w
+        })
+      })
+    }
+
+    // Filter by search query
+    if (query) {
+      const q = query.toLowerCase()
+      items = items.filter(item =>
+        item.name?.toLowerCase().includes(q) ||
+        item.fullName?.toLowerCase().includes(q) ||
+        item.context?.toLowerCase().includes(q)
+      )
+    }
+
+    // Filter by letter
+    if (letter) {
+      items = items.filter(item =>
+        item.name?.toUpperCase().startsWith(letter)
+      )
+    }
+
+    // Sort alphabetically
+    items.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
+
+    return items
+  }
+
+  const filteredItems = getFilteredItems()
+
+  const handleSelect = (item) => {
+    if (item.type === 'person') {
+      onSelectPerson(item.data)
+    } else if (item.type === 'song') {
+      onSelectSong(item.data)
+    } else if (item.type === 'group') {
+      onSelectGroup(item.data)
+    }
+    onClose()
+  }
+
+  const categories = [
+    { id: 'all', label: 'All', emoji: '🔍' },
+    { id: 'people', label: 'People', emoji: '👥' },
+    { id: 'family', label: 'Family', emoji: '👨‍👩‍👧' },
+    { id: 'bands', label: 'Bands', emoji: '🎤' },
+    { id: 'youtube', label: 'YouTube', emoji: '📺' },
+    { id: 'songs', label: 'Songs', emoji: '🎵' },
+    { id: 'groups', label: 'Groups', emoji: '🎭' },
+  ]
+
+  return (
+    <div className="fixed inset-0 z-50 bg-warm-50 animate-fade-in flex flex-col">
+      {/* Header */}
+      <div className="bg-sienna-400 text-white p-3 safe-top">
+        <div className="flex items-center gap-2">
+          <button onClick={onClose} className="p-1">
+            <X className="w-5 h-5" />
+          </button>
+          <h1 className="text-base font-display font-bold">Search & Browse</h1>
+        </div>
+      </div>
+
+      {/* Search Input */}
+      <div className="p-3 bg-white border-b border-warm-100">
+        <div className="flex items-center gap-2 bg-warm-50 rounded-lg px-3 py-2">
+          <Search className="w-4 h-4 text-warm-400" />
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Type to search..."
+            value={query}
+            onChange={(e) => { setQuery(e.target.value); setLetter(null); }}
+            className="flex-1 bg-transparent outline-none text-sm"
+          />
+          {query && (
+            <button onClick={() => setQuery('')} className="text-warm-400">
+              <X className="w-4 h-4" />
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Category Filter */}
+      <div className="px-3 py-2 bg-white border-b border-warm-100">
+        <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
+          {categories.map(cat => (
+            <button
+              key={cat.id}
+              onClick={() => setCategory(cat.id)}
+              className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs whitespace-nowrap transition-all
+                ${category === cat.id
+                  ? 'bg-sienna-400 text-white'
+                  : 'bg-warm-100 text-warm-600 hover:bg-warm-200'
+                }`}
+            >
+              <span>{cat.emoji}</span>
+              <span>{cat.label}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Alphabet Picker */}
+      <div className="px-2 py-1.5 bg-white border-b border-warm-100">
+        <div className="flex flex-wrap justify-center gap-0.5">
+          <button
+            onClick={() => setLetter(null)}
+            className={`w-6 h-6 rounded text-[10px] font-medium transition-all
+              ${letter === null ? 'bg-sienna-400 text-white' : 'text-warm-500 hover:bg-warm-100'}`}
+          >
+            All
+          </button>
+          {alphabet.map(l => (
+            <button
+              key={l}
+              onClick={() => setLetter(letter === l ? null : l)}
+              className={`w-6 h-6 rounded text-[10px] font-medium transition-all
+                ${letter === l ? 'bg-sienna-400 text-white' : 'text-warm-500 hover:bg-warm-100'}`}
+            >
+              {l}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Results */}
+      <div className="flex-1 overflow-y-auto p-3">
+        {filteredItems.length > 0 ? (
+          <div className="space-y-1">
+            <div className="text-[10px] text-warm-400 uppercase tracking-wide mb-2">
+              {filteredItems.length} result{filteredItems.length !== 1 ? 's' : ''}
+              {letter && ` starting with "${letter}"`}
+            </div>
+            {filteredItems.map(item => (
+              <button
+                key={`${item.type}-${item.id}`}
+                onClick={() => handleSelect(item)}
+                className="w-full flex items-center gap-2 p-2 rounded-lg bg-white hover:bg-warm-50 transition-colors text-left"
+              >
+                <div className="w-9 h-9 rounded-lg bg-warm-100 flex items-center justify-center text-lg">
+                  {item.emoji}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-sm font-medium text-warm-700 truncate">{item.name}</div>
+                  {item.context && (
+                    <div className="text-[10px] text-warm-400 flex items-center gap-1 truncate">
+                      {item.contextEmoji && <span>{item.contextEmoji}</span>}
+                      <span>{item.context}</span>
+                      <span className="text-warm-300">• {item.type}</span>
+                    </div>
+                  )}
+                </div>
+                <ChevronRight className="w-4 h-4 text-warm-300 flex-shrink-0" />
+              </button>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-12">
+            <div className="text-3xl mb-2">🔍</div>
+            <div className="text-warm-400 text-sm">
+              {query || letter ? 'No matches found' : 'Start typing to search'}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function NavButton({ label, icon: Icon, active, onClick }) {
   return (
     <button
@@ -776,7 +1009,7 @@ function EventPicker({ events, selectedDate, onSelectEvent, title }) {
   )
 }
 
-function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }) {
+function TimelinePage({ people, events, groups = [], onToggleFavorite, loading, onOpenSearch }) {
   const [selected, setSelected] = useState([])
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [selectedEvent, setSelectedEvent] = useState(null)
@@ -865,11 +1098,13 @@ function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }
             />
           )
         })}
-        <CategoryButton
-          label="More..."
-          isActive={showPeoplePicker === 'all'}
-          onClick={() => { setShowPeoplePicker(showPeoplePicker === 'all' ? null : 'all'); setShowEventPicker(false); }}
-        />
+        <button
+          onClick={onOpenSearch}
+          className="flex items-center gap-1 px-2.5 py-1.5 whitespace-nowrap rounded-full font-medium border transition-all active:scale-95 text-xs flex-shrink-0 bg-dusty-100 text-dusty-600 border-dusty-200 hover:bg-dusty-200"
+        >
+          <Search className="w-3 h-3" />
+          Browse All
+        </button>
         <span className="text-warm-300 self-center">|</span>
         <CategoryButton
           label="Today"
@@ -892,11 +1127,9 @@ function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }
           {(() => {
             const selectedGroup = groups.find(g => g.id === showPeoplePicker)
             const pickerPeople = showPeoplePicker === 'family' ? familyMembers
-              : showPeoplePicker === 'all' ? people
               : selectedGroup ? getPeopleInGroup(selectedGroup.id)
               : []
             const pickerTitle = showPeoplePicker === 'family' ? '👨‍👩‍👧‍👦 Family'
-              : showPeoplePicker === 'all' ? '👥 Everyone'
               : selectedGroup ? `${selectedGroup.emoji || '👥'} ${selectedGroup.name}`
               : ''
 
@@ -1007,8 +1240,7 @@ function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }
   )
 }
 
-function PeoplePage({ people, groups = [], onToggleFavorite, onSelectPerson, loading }) {
-  const [search, setSearch] = useState('')
+function PeoplePage({ people, groups = [], onToggleFavorite, onSelectPerson, loading, onOpenSearch }) {
   const favorites = people.filter(p => p.isFavorite)
 
   // Group people by their actual group
@@ -1020,14 +1252,6 @@ function PeoplePage({ people, groups = [], onToggleFavorite, onSelectPerson, loa
   const groupsWithPeople = groups.filter(g =>
     peopleWithGroups.some(p => p.group_id === g.id)
   )
-
-  const filtered = search
-    ? people.filter(p =>
-        (p.name || '').toLowerCase().includes(search.toLowerCase()) ||
-        (p.nickname || '').toLowerCase().includes(search.toLowerCase()) ||
-        (p.group_name || '').toLowerCase().includes(search.toLowerCase())
-      )
-    : null
 
   if (loading) return <LoadingSpinner />
 
@@ -1051,41 +1275,17 @@ function PeoplePage({ people, groups = [], onToggleFavorite, onSelectPerson, loa
         </div>
       )}
 
-      <div className="search-box mb-3">
-        <Search className="w-4 h-4 text-warm-400" />
-        <input
-          type="text"
-          placeholder="Search people..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="text-sm"
-        />
-      </div>
+      {/* Search button - opens global search */}
+      <button
+        onClick={onOpenSearch}
+        className="w-full flex items-center gap-2 p-3 mb-3 bg-white rounded-lg border border-warm-200 text-warm-400 hover:bg-warm-50 transition-colors"
+      >
+        <Search className="w-4 h-4" />
+        <span className="text-sm">Search all people...</span>
+      </button>
 
-      {filtered ? (
-        <div className="card">
-          {filtered.length > 0 ? (
-            <div className="space-y-1">
-              {filtered.map(p => (
-                <PersonRow
-                  key={p.id}
-                  person={p}
-                  onToggleFavorite={onToggleFavorite}
-                  onClick={() => onSelectPerson(p)}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state">
-              <div className="icon">🔍</div>
-              <div className="message">No people found</div>
-            </div>
-          )}
-        </div>
-      ) : (
-        <>
-          {/* Family */}
-          {familyMembers.length > 0 && (
+      {/* Family */}
+      {familyMembers.length > 0 && (
             <div className="card mb-3 p-3">
               <div className="flex items-center gap-1.5 text-sm font-medium text-warm-600 mb-2">
                 <Heart className="w-3.5 h-3.5 text-blush-400" />
@@ -1148,8 +1348,6 @@ function PeoplePage({ people, groups = [], onToggleFavorite, onSelectPerson, loa
               </div>
             </div>
           )}
-        </>
-      )}
     </div>
   )
 }
@@ -1564,6 +1762,8 @@ export default function App() {
   const [data, setData] = useState({ people: [], events: [], groups: [], works: [] })
   const [selectedPerson, setSelectedPerson] = useState(null)
   const [selectedSong, setSelectedSong] = useState(null)
+  const [selectedGroup, setSelectedGroup] = useState(null)
+  const [showSearch, setShowSearch] = useState(false)
 
   useEffect(() => {
     async function loadData() {
@@ -1655,6 +1855,7 @@ export default function App() {
           groups={data.groups}
           onToggleFavorite={(id) => toggleFavorite('people', id)}
           onSelectPerson={setSelectedPerson}
+          onOpenSearch={() => setShowSearch(true)}
           loading={loading}
         />
       case 'songs':
@@ -1689,7 +1890,8 @@ export default function App() {
           people={data.people}
           events={data.events}
           groups={data.groups}
-          onToggleFavorite={(id) => toggleFavorite('events', id)}
+          onToggleFavorite={(id) => toggleFavorite('people', id)}
+          onOpenSearch={() => setShowSearch(true)}
           loading={loading}
         />
     }
@@ -1698,12 +1900,36 @@ export default function App() {
   return (
     <div className="min-h-screen min-h-[100dvh] bg-warm-50">
       <header className="bg-sienna-400 text-white p-3 safe-top">
-        <h1 className="text-base font-display font-bold flex items-center gap-1.5">
-          <Sparkles className="w-4 h-4" />
-          sienna
-        </h1>
-        <p className="text-sienna-100 text-xs">How old was everyone?</p>
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-base font-display font-bold flex items-center gap-1.5">
+              <Sparkles className="w-4 h-4" />
+              sienna
+            </h1>
+            <p className="text-sienna-100 text-xs">How old was everyone?</p>
+          </div>
+          <button
+            onClick={() => setShowSearch(true)}
+            className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
+          >
+            <Search className="w-4 h-4" />
+          </button>
+        </div>
       </header>
+
+      {/* Global Search Modal */}
+      {showSearch && (
+        <GlobalSearch
+          people={data.people}
+          groups={data.groups}
+          works={data.works}
+          events={data.events}
+          onSelectPerson={(p) => { setSelectedPerson(p); setShowSearch(false); }}
+          onSelectSong={(s) => { setSelectedSong(s); setShowSearch(false); }}
+          onSelectGroup={(g) => { setSelectedGroup(g); setPage('groups'); setShowSearch(false); }}
+          onClose={() => setShowSearch(false)}
+        />
+      )}
 
       <main className="pb-16">
         {renderPage()}
