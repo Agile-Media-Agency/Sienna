@@ -108,10 +108,10 @@ async function toggleFavoriteAPI(itemType, itemId) {
 
 function getColorForType(type) {
   switch (type) {
-    case 'family': return '#FF69B4'
-    case 'youtuber': return '#E74C3C'
-    case 'musician': return '#9B59B6'
-    default: return '#C9A88C'
+    case 'family': return '#C9A89D'  // blush
+    case 'youtuber': return '#8B7355' // sienna
+    case 'musician': return '#A8BCC8' // dusty blue
+    default: return '#8B7355'
   }
 }
 
@@ -122,16 +122,16 @@ function NavButton({ label, icon: Icon, active, onClick }) {
     <button
       onClick={onClick}
       className={`
-        flex flex-col items-center justify-center gap-1 py-2 px-3 min-w-[60px]
-        rounded-2xl font-medium transition-all duration-200
+        flex flex-col items-center justify-center gap-1 py-2 px-3 min-w-[56px]
+        rounded-xl font-medium transition-all duration-200
         ${active
-          ? 'bg-sienna-500 text-white shadow-lg scale-105'
-          : 'text-warm-500 hover:text-sienna-600 hover:bg-sienna-50'
+          ? 'bg-sienna-400 text-white shadow-soft'
+          : 'text-warm-400 hover:text-sienna-500 hover:bg-warm-50'
         }
       `}
     >
-      <Icon className={`w-5 h-5 ${active ? '' : 'opacity-70'}`} />
-      <span className="text-[11px]">{label}</span>
+      <Icon className={`w-4 h-4 ${active ? '' : 'opacity-80'}`} />
+      <span className="text-[10px]">{label}</span>
     </button>
   )
 }
@@ -140,9 +140,9 @@ function BackButton({ onClick }) {
   return (
     <button
       onClick={onClick}
-      className="mb-4 px-4 py-2 bg-sienna-500 text-white rounded-full font-medium text-sm flex items-center gap-1"
+      className="mb-4 px-3 py-1.5 bg-sienna-400 text-white rounded-full font-medium text-sm flex items-center gap-1"
     >
-      <ArrowLeft className="w-4 h-4" /> Back
+      <ArrowLeft className="w-3.5 h-3.5" /> Back
     </button>
   )
 }
@@ -151,7 +151,7 @@ function HeartButton({ isFavorite, onToggle }) {
   return (
     <button onClick={onToggle} className="heart-btn">
       <Heart
-        className={`w-5 h-5 transition-colors ${isFavorite ? 'fill-coral text-coral' : 'text-warm-300'}`}
+        className={`w-4 h-4 transition-colors ${isFavorite ? 'fill-blush-400 text-blush-400' : 'text-warm-300'}`}
       />
     </button>
   )
@@ -222,7 +222,7 @@ function PersonContextMenu({ person, position, onClose, onToggleFavorite, onView
           onClick={handleFavorite}
           className="w-full px-3 py-2.5 text-left flex items-center gap-3 hover:bg-warm-50 active:bg-warm-100"
         >
-          <Heart className={`w-4 h-4 ${person.isFavorite ? 'fill-coral text-coral' : 'text-warm-500'}`} />
+          <Heart className={`w-4 h-4 ${person.isFavorite ? 'fill-blush-400 text-blush-400' : 'text-warm-500'}`} />
           <span>{person.isFavorite ? 'Remove from Favorites' : 'Add to Favorites'}</span>
         </button>
 
@@ -298,22 +298,22 @@ function PersonRow({ person, showHeart = true, onToggleFavorite, onViewProfile, 
         {...longPressHandlers}
       >
         <div className="avatar bg-warm-100">
-          <span>{person.emoji || '👤'}</span>
+          <span className="text-base">{person.emoji || '👤'}</span>
         </div>
         <div className="info">
           <div className="name flex items-center gap-1">
             {person.nickname || person.name}
-            {person.isFavorite && <Heart className="w-3 h-3 fill-coral text-coral" />}
+            {person.isFavorite && <Heart className="w-2.5 h-2.5 fill-blush-400 text-blush-400" />}
           </div>
           {/* Show group/channel association - subtle gray */}
           {showGroup && person.group_name && person.type !== 'family' && (
             <div className="text-xs text-warm-400 flex items-center gap-1">
-              <span>{person.group_emoji || '📺'}</span>
+              <span className="text-sm">{person.group_emoji || '📺'}</span>
               <span>{person.group_name}</span>
             </div>
           )}
           <div className="meta flex items-center gap-1">
-            <Cake className="w-3 h-3" />
+            <Cake className="w-2.5 h-2.5" />
             {formatDate(person.birthday)}
           </div>
           {showStatus && person.left_date && (
@@ -321,8 +321,8 @@ function PersonRow({ person, showHeart = true, onToggleFavorite, onViewProfile, 
           )}
         </div>
         {/* Consistent neutral age badge */}
-        <span className="age-badge bg-sienna-400 text-white">{age}</span>
-        {onClick && <ChevronRight className="w-4 h-4 text-warm-300" />}
+        <span className="age-badge bg-sienna-400 text-white text-xs">{age}</span>
+        {onClick && <ChevronRight className="w-3.5 h-3.5 text-warm-300" />}
       </div>
 
       {/* Context menu */}
@@ -351,10 +351,10 @@ function Pill({ item, selected, onClick, onToggleFavorite, onViewProfile, onShow
         {...longPressHandlers}
         className={`pill ${selected ? 'selected' : ''}`}
       >
-        <span className="emoji">{item.emoji || '📌'}</span>
-        <span>{item.nickname || item.name}</span>
+        <span className="emoji text-sm">{item.emoji || '📌'}</span>
+        <span className="text-sm">{item.nickname || item.name}</span>
         {item.isFavorite && !selected && (
-          <Heart className="w-3 h-3 fill-coral text-coral" />
+          <Heart className="w-2.5 h-2.5 fill-blush-400 text-blush-400" />
         )}
       </button>
       {menuPos && (
@@ -374,7 +374,7 @@ function Pill({ item, selected, onClick, onToggleFavorite, onViewProfile, onShow
 function LoadingSpinner() {
   return (
     <div className="flex items-center justify-center p-12">
-      <Loader2 className="w-8 h-8 text-sienna-500 animate-spin" />
+      <Loader2 className="w-6 h-6 text-sienna-400 animate-spin" />
     </div>
   )
 }
@@ -391,25 +391,19 @@ function PersonDetailView({ person, family, onBack }) {
       <BackButton onClick={onBack} />
 
       {/* Person Header */}
-      <div
-        className="card mb-4"
-        style={{ background: `linear-gradient(135deg, ${person.color}30, white)` }}
-      >
+      <div className="card mb-4 bg-gradient-to-br from-warm-100 to-white">
         <div className="text-center py-4">
-          <div
-            className="w-20 h-20 rounded-full mx-auto mb-3 flex items-center justify-center text-4xl"
-            style={{ backgroundColor: person.color || '#FF69B4' }}
-          >
+          <div className="w-16 h-16 rounded-full mx-auto mb-3 flex items-center justify-center text-3xl bg-sienna-200">
             {person.emoji || '👤'}
           </div>
-          <h2 className="text-2xl font-display font-bold text-sienna-700">
+          <h2 className="text-xl font-display font-bold text-sienna-600">
             {person.nickname || person.name}
           </h2>
           {person.nickname && person.name !== person.nickname && (
             <p className="text-warm-500 text-sm">{person.name}</p>
           )}
           {person.role && (
-            <p className="text-sienna-500 text-sm mt-1">{person.role}</p>
+            <p className="text-sienna-400 text-sm mt-1">{person.role}</p>
           )}
         </div>
       </div>
@@ -417,12 +411,12 @@ function PersonDetailView({ person, family, onBack }) {
       {/* Birthday Card */}
       <div className="card mb-4">
         <div className="card-header">
-          <Cake className="w-5 h-5 text-sienna-500" />
+          <Cake className="w-4 h-4 text-sienna-400" />
           Birthday
         </div>
         <div className="p-3">
-          <p className="text-lg font-semibold">{formatBirthday(person.birthday)}</p>
-          <p className="text-warm-500">Age now: <strong className="text-sienna-600">{ageNow}</strong></p>
+          <p className="font-semibold">{formatBirthday(person.birthday)}</p>
+          <p className="text-warm-500 text-sm">Age now: <strong className="text-sienna-500">{ageNow}</strong></p>
         </div>
       </div>
 
@@ -430,32 +424,32 @@ function PersonDetailView({ person, family, onBack }) {
       {ageAtJoin !== null && (
         <div className="card mb-4">
           <div className="card-header">
-            <Clock className="w-5 h-5 text-sienna-500" />
+            <Clock className="w-4 h-4 text-sienna-400" />
             Ages at Key Moments
           </div>
           <div className="space-y-2 p-3">
-            <div className="flex justify-between items-center p-2 bg-green-50 rounded-lg">
+            <div className="flex justify-between items-center p-2 bg-dusty-50 rounded-lg">
               <div>
                 <div className="font-medium text-sm">Joined Band</div>
                 <div className="text-xs text-warm-400">{formatDate(person.joined_date)}</div>
               </div>
-              <span className="px-3 py-1 bg-green-500 text-white rounded-full font-bold">{ageAtJoin}</span>
+              <span className="px-2.5 py-1 bg-dusty-400 text-white rounded-full font-bold text-sm">{ageAtJoin}</span>
             </div>
             {ageAtLeft !== null && (
-              <div className="flex justify-between items-center p-2 bg-pink-50 rounded-lg">
+              <div className="flex justify-between items-center p-2 bg-blush-50 rounded-lg">
                 <div>
                   <div className="font-medium text-sm">Left Band</div>
                   <div className="text-xs text-warm-400">{formatDate(person.left_date)}</div>
                 </div>
-                <span className="px-3 py-1 bg-pink-500 text-white rounded-full font-bold">{ageAtLeft}</span>
+                <span className="px-2.5 py-1 bg-blush-400 text-white rounded-full font-bold text-sm">{ageAtLeft}</span>
               </div>
             )}
-            <div className="flex justify-between items-center p-2 bg-orange-50 rounded-lg">
+            <div className="flex justify-between items-center p-2 bg-sienna-50 rounded-lg">
               <div>
                 <div className="font-bold text-sm">Right NOW</div>
                 <div className="text-xs text-warm-400">Today!</div>
               </div>
-              <span className="px-3 py-1 bg-orange-500 text-white rounded-full font-bold">{ageNow}</span>
+              <span className="px-2.5 py-1 bg-sienna-400 text-white rounded-full font-bold text-sm">{ageNow}</span>
             </div>
           </div>
         </div>
@@ -463,9 +457,9 @@ function PersonDetailView({ person, family, onBack }) {
 
       {/* Our Family When They Joined - for band members */}
       {person.joined_date && family.length > 0 && (
-        <div className="card mb-4 bg-gradient-to-br from-blue-50 to-white">
-          <div className="card-header text-blue-600">
-            <Users className="w-5 h-5" />
+        <div className="card mb-4 bg-gradient-to-br from-dusty-50 to-white">
+          <div className="card-header text-dusty-500">
+            <Users className="w-4 h-4" />
             Our Family When {person.nickname || person.name} Joined
           </div>
           <div className="space-y-1">
@@ -485,10 +479,10 @@ function PersonDetailView({ person, family, onBack }) {
       {person.fun_fact && (
         <div className="card mb-4">
           <div className="card-header">
-            <Sparkles className="w-5 h-5 text-sienna-500" />
+            <Sparkles className="w-4 h-4 text-sienna-400" />
             Fun Fact
           </div>
-          <p className="p-3 text-warm-600">{person.fun_fact}</p>
+          <p className="p-3 text-warm-600 text-sm">{person.fun_fact}</p>
         </div>
       )}
 
@@ -496,21 +490,18 @@ function PersonDetailView({ person, family, onBack }) {
       {person.current_status && (
         <div className="card mb-4">
           <div className="card-header">
-            <Star className="w-5 h-5 text-sienna-500" />
+            <Star className="w-4 h-4 text-sienna-400" />
             Now
           </div>
-          <p className="p-3 text-warm-600">{person.current_status}</p>
+          <p className="p-3 text-warm-600 text-sm">{person.current_status}</p>
         </div>
       )}
 
       {/* Instagram */}
       {person.instagram && (
-        <div
-          className="card text-center p-4"
-          style={{ backgroundColor: person.color || '#FF69B4' }}
-        >
-          <p className="text-white font-semibold flex items-center justify-center gap-2">
-            <Instagram className="w-5 h-5" />
+        <div className="card text-center p-3 bg-sienna-400">
+          <p className="text-white font-medium flex items-center justify-center gap-2 text-sm">
+            <Instagram className="w-4 h-4" />
             {person.instagram}
           </p>
         </div>
@@ -538,20 +529,20 @@ function SongDetailView({ song, people, family, works, onBack }) {
       <BackButton onClick={onBack} />
 
       {/* Song Header */}
-      <div className="card mb-4 bg-gradient-to-br from-pink-500 to-purple-600 text-white">
-        <div className="text-center py-6">
-          <div className="text-5xl mb-2">{song.emoji || '🎵'}</div>
-          <h2 className="text-2xl font-display font-bold">{song.name}</h2>
-          <p className="opacity-90">{song.type} • {formatDate(song.release_date)}</p>
-          {song.note && <p className="mt-2 text-sm">{song.note}</p>}
+      <div className="card mb-4 bg-sienna-400 text-white">
+        <div className="text-center py-4">
+          <div className="text-4xl mb-2">{song.emoji || '🎵'}</div>
+          <h2 className="text-xl font-display font-bold">{song.name}</h2>
+          <p className="opacity-90 text-sm">{song.type} • {formatDate(song.release_date)}</p>
+          {song.note && <p className="mt-2 text-sm opacity-80">{song.note}</p>}
         </div>
       </div>
 
       {/* Album Tracks with Lyrics Links */}
       {albumTracks.length > 0 && (
-        <div className="card mb-4 bg-gradient-to-br from-purple-50 to-white">
-          <div className="card-header text-purple-600">
-            <Disc3 className="w-5 h-5" />
+        <div className="card mb-4 bg-gradient-to-br from-warm-50 to-white">
+          <div className="card-header text-sienna-500">
+            <Disc3 className="w-4 h-4" />
             {albumTracks.length} Songs on this Album
           </div>
           <div className="space-y-1">
@@ -561,15 +552,15 @@ function SongDetailView({ song, people, family, works, onBack }) {
                 href={track.lyrics_url || '#'}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="item-row hover:bg-purple-50 cursor-pointer block"
+                className="item-row hover:bg-warm-50 cursor-pointer block"
               >
-                <div className="avatar bg-purple-100">
-                  <span>{track.emoji || '🎵'}</span>
+                <div className="avatar bg-warm-100">
+                  <span className="text-base">{track.emoji || '🎵'}</span>
                 </div>
                 <div className="info">
-                  <div className="name">{track.track_number}. {track.name}</div>
+                  <div className="name text-sm">{track.track_number}. {track.name}</div>
                   {track.lyrics_url && (
-                    <div className="meta text-purple-500">Tap for lyrics →</div>
+                    <div className="meta text-dusty-400 text-xs">Tap for lyrics →</div>
                   )}
                 </div>
               </a>
@@ -584,24 +575,24 @@ function SongDetailView({ song, people, family, works, onBack }) {
           href={song.lyrics_url}
           target="_blank"
           rel="noopener noreferrer"
-          className="card mb-4 bg-gradient-to-br from-green-500 to-emerald-600 text-white block hover:shadow-lg transition-shadow"
+          className="card mb-4 bg-dusty-400 text-white block hover:shadow-soft transition-shadow"
         >
-          <div className="flex items-center gap-4 p-4">
-            <div className="text-4xl">📝</div>
+          <div className="flex items-center gap-3 p-3">
+            <div className="text-3xl">📝</div>
             <div className="flex-1">
-              <div className="font-bold text-lg">View Lyrics</div>
+              <div className="font-bold">View Lyrics</div>
               <div className="opacity-90 text-sm">Tap to sing along!</div>
             </div>
-            <ChevronRight className="w-6 h-6" />
+            <ChevronRight className="w-5 h-5" />
           </div>
         </a>
       )}
 
       {/* Band Members at Release */}
       {bandMembers.length > 0 && (
-        <div className="card mb-4 bg-gradient-to-br from-yellow-50 to-white">
-          <div className="card-header text-yellow-600">
-            <Music className="w-5 h-5" />
+        <div className="card mb-4 bg-gradient-to-br from-blush-50 to-white">
+          <div className="card-header text-blush-500">
+            <Music className="w-4 h-4" />
             Band Members
           </div>
           <div className="space-y-1">
@@ -620,9 +611,9 @@ function SongDetailView({ song, people, family, works, onBack }) {
 
       {/* Our Family */}
       {family.length > 0 && (
-        <div className="card bg-gradient-to-br from-blue-50 to-white">
-          <div className="card-header text-blue-600">
-            <Users className="w-5 h-5" />
+        <div className="card bg-gradient-to-br from-dusty-50 to-white">
+          <div className="card-header text-dusty-500">
+            <Users className="w-4 h-4" />
             Our Family
           </div>
           <div className="space-y-1">
@@ -651,19 +642,19 @@ function CategoryButton({ label, count, isActive, onClick }) {
     <button
       onClick={onClick}
       className={`
-        flex items-center gap-1.5 px-3 py-2 whitespace-nowrap
-        rounded-full font-medium border-2 transition-all duration-200
-        active:scale-95 text-sm flex-shrink-0
+        flex items-center gap-1 px-2.5 py-1.5 whitespace-nowrap
+        rounded-full font-medium border transition-all duration-200
+        active:scale-95 text-xs flex-shrink-0
         ${isActive
-          ? 'bg-sienna-500 text-white border-sienna-500 shadow-md'
-          : 'bg-white text-warm-600 border-warm-200 hover:border-warm-300 hover:bg-warm-50'
+          ? 'bg-sienna-400 text-white border-sienna-400 shadow-soft'
+          : 'bg-white text-warm-500 border-warm-200 hover:border-warm-300 hover:bg-warm-50'
         }
       `}
       title={label}
     >
       {shortLabel}
       {count > 0 && (
-        <span className={`text-xs px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/30' : 'bg-warm-100'}`}>
+        <span className={`text-[10px] px-1 py-0.5 rounded-full ${isActive ? 'bg-white/25' : 'bg-warm-100'}`}>
           {count}
         </span>
       )}
@@ -679,11 +670,13 @@ function PersonPicker({ people, selected, onToggle, onToggleFavorite, onViewProf
   if (people.length === 0) return null
 
   return (
-    <div className="mb-3">
-      <div className="text-xs font-semibold text-warm-500 uppercase tracking-wide mb-2 px-1">
-        {title}
-      </div>
-      <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+    <div className="mb-2">
+      {title && (
+        <div className="text-[10px] font-semibold text-warm-400 uppercase tracking-wide mb-1.5 px-1">
+          {title}
+        </div>
+      )}
+      <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-hide">
         {people.map(p => {
           const isSelected = selected.includes(p.id)
           return (
@@ -722,34 +715,34 @@ function PersonPickerCard({ person, isSelected, onToggle, onLongPress }) {
       onClick={onToggle}
       {...longPressHandlers}
       className={`
-        flex-shrink-0 flex flex-col items-center gap-1 p-3 min-w-[70px]
-        rounded-xl border-2 transition-all duration-200 active:scale-95
+        flex-shrink-0 flex flex-col items-center gap-0.5 p-2 min-w-[60px]
+        rounded-lg border transition-all duration-200 active:scale-95 relative
         ${isSelected
-          ? 'bg-sienna-500 text-white border-sienna-500 shadow-md'
-          : 'bg-white text-warm-600 border-warm-200 hover:border-warm-300'
+          ? 'bg-sienna-400 text-white border-sienna-400 shadow-soft'
+          : 'bg-white text-warm-500 border-warm-200 hover:border-warm-300'
         }
       `}
     >
-      <span className="text-2xl">{person.emoji || '👤'}</span>
-      <span className="text-xs font-medium truncate max-w-[60px]">
+      <span className="text-xl">{person.emoji || '👤'}</span>
+      <span className="text-[10px] font-medium truncate max-w-[56px]">
         {person.nickname || person.name?.split(' ')[0]}
       </span>
-      {isSelected && <span className="text-[10px]">✓</span>}
+      {isSelected && <span className="text-[9px]">✓</span>}
       {/* Small heart indicator if favorite */}
       {person.isFavorite && !isSelected && (
-        <Heart className="w-3 h-3 fill-coral text-coral absolute top-1 right-1" />
+        <Heart className="w-2 h-2 fill-blush-400 text-blush-400 absolute top-0.5 right-0.5" />
       )}
     </button>
   )
 }
 
-// Event picker with big touchable buttons - neutral colors
+// Event picker with touchable buttons - neutral colors
 function EventPicker({ events, selectedDate, onSelectEvent, title }) {
   if (events.length === 0) return null
 
   return (
     <div className="mb-3">
-      <div className="text-xs font-semibold text-warm-500 uppercase tracking-wide mb-2 px-1">
+      <div className="text-[10px] font-semibold text-warm-400 uppercase tracking-wide mb-2 px-1">
         {title}
       </div>
       <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
@@ -760,19 +753,19 @@ function EventPicker({ events, selectedDate, onSelectEvent, title }) {
               key={e.id}
               onClick={() => onSelectEvent(e)}
               className={`
-                flex-shrink-0 flex flex-col items-center gap-1 p-3 min-w-[90px]
-                rounded-xl border-2 transition-all duration-200 active:scale-95
+                flex-shrink-0 flex flex-col items-center gap-0.5 p-2 min-w-[70px]
+                rounded-lg border transition-all duration-200 active:scale-95
                 ${isSelected
-                  ? 'bg-sienna-500 text-white border-sienna-500 shadow-md'
-                  : 'bg-white text-warm-600 border-warm-200 hover:border-warm-300'
+                  ? 'bg-sienna-400 text-white border-sienna-400 shadow-soft'
+                  : 'bg-white text-warm-500 border-warm-200 hover:border-warm-300'
                 }
               `}
             >
-              <span className="text-2xl">{e.emoji || '📅'}</span>
-              <span className="text-xs font-medium text-center line-clamp-2 max-w-[80px]">
+              <span className="text-lg">{e.emoji || '📅'}</span>
+              <span className="text-[10px] font-medium text-center line-clamp-2 max-w-[66px]">
                 {e.name}
               </span>
-              <span className={`text-[10px] ${isSelected ? 'text-white/80' : 'text-warm-400'}`}>
+              <span className={`text-[9px] ${isSelected ? 'text-white/80' : 'text-warm-400'}`}>
                 {formatDate(e.date).split(',')[0]}
               </span>
             </button>
@@ -844,72 +837,59 @@ function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }
   if (loading) return <LoadingSpinner />
 
   return (
-    <div className="p-4 pb-24 animate-fade-in">
-      <h1 className="text-2xl font-display font-bold text-sienna-700 mb-4 flex items-center gap-2">
-        <Clock className="w-6 h-6" />
+    <div className="p-3 pb-24 animate-fade-in">
+      {/* Compact header */}
+      <h1 className="text-lg font-display font-bold text-sienna-500 mb-3 flex items-center gap-1.5">
+        <Clock className="w-4 h-4" />
         Timeline
       </h1>
 
-      {/* Quick Favorites - only show if there are favorites */}
-      {favPeople.length > 0 && (
-        <div className="mb-4">
-          <div className="section-header flex items-center gap-1">
-            <Heart className="w-3 h-3 fill-coral text-coral" /> Quick Add Favorites
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {favPeople.map(p => (
-              <Pill
-                key={p.id}
-                item={p}
-                selected={selected.includes(p.id)}
-                onClick={() => togglePerson(p.id)}
-                onToggleFavorite={onToggleFavorite}
-                onShowGroup={(gid) => setShowPeoplePicker(gid)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Browse People - Family first, then groups */}
-      <div className="mb-4">
-        <div className="section-header flex items-center gap-1">
-          <Users className="w-3 h-3" /> Browse People
-        </div>
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+      {/* Combined control row - People + Date in one clean line */}
+      <div className="flex gap-2 mb-3 overflow-x-auto pb-1 scrollbar-hide">
+        <CategoryButton
+          label="Family"
+          count={familyMembers.length}
+          isActive={showPeoplePicker === 'family'}
+          onClick={() => { setShowPeoplePicker(showPeoplePicker === 'family' ? null : 'family'); setShowEventPicker(false); }}
+        />
+        {groups.slice(0, 3).map(g => {
+          const groupPeople = getPeopleInGroup(g.id)
+          if (groupPeople.length === 0) return null
+          return (
+            <CategoryButton
+              key={g.id}
+              label={g.name}
+              count={groupPeople.length}
+              isActive={showPeoplePicker === g.id}
+              onClick={() => { setShowPeoplePicker(showPeoplePicker === g.id ? null : g.id); setShowEventPicker(false); }}
+            />
+          )
+        })}
+        <CategoryButton
+          label="More..."
+          isActive={showPeoplePicker === 'all'}
+          onClick={() => { setShowPeoplePicker(showPeoplePicker === 'all' ? null : 'all'); setShowEventPicker(false); }}
+        />
+        <span className="text-warm-300 self-center">|</span>
+        <CategoryButton
+          label="Today"
+          isActive={!selectedEvent && selectedDate === new Date().toISOString().split('T')[0]}
+          onClick={() => { selectToday(); setShowPeoplePicker(null); }}
+        />
+        {attendedEvents.length > 0 && (
           <CategoryButton
-            label="Family"
-            count={familyMembers.length}
-            isActive={showPeoplePicker === 'family'}
-            onClick={() => setShowPeoplePicker(showPeoplePicker === 'family' ? null : 'family')}
+            label="Events"
+            count={attendedEvents.length}
+            isActive={showEventPicker === 'attended'}
+            onClick={() => { setShowEventPicker(showEventPicker === 'attended' ? false : 'attended'); setShowPeoplePicker(null); }}
           />
-          {groups.map(g => {
-            const groupPeople = getPeopleInGroup(g.id)
-            if (groupPeople.length === 0) return null
-            return (
-              <CategoryButton
-                key={g.id}
-                label={g.name}
-                count={groupPeople.length}
-                isActive={showPeoplePicker === g.id}
-                onClick={() => setShowPeoplePicker(showPeoplePicker === g.id ? null : g.id)}
-              />
-            )
-          })}
-          <CategoryButton
-            label="Everyone"
-            count={people.length}
-            isActive={showPeoplePicker === 'all'}
-            onClick={() => setShowPeoplePicker(showPeoplePicker === 'all' ? null : 'all')}
-          />
-        </div>
+        )}
       </div>
 
-      {/* Expandable Person Picker */}
+      {/* Expandable Person Picker - simplified */}
       {showPeoplePicker && (
-        <div className="card mb-4 bg-warm-50">
+        <div className="card mb-3 p-3 bg-warm-50">
           {(() => {
-            // Determine which people to show based on selection
             const selectedGroup = groups.find(g => g.id === showPeoplePicker)
             const pickerPeople = showPeoplePicker === 'family' ? familyMembers
               : showPeoplePicker === 'all' ? people
@@ -922,118 +902,79 @@ function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }
 
             return (
               <>
-                <div className="flex justify-between items-center mb-3">
-                  <span className="font-semibold text-warm-700">{pickerTitle}</span>
-                  <div className="flex gap-2">
+                <div className="flex justify-between items-center mb-2">
+                  <span className="font-medium text-warm-600 text-sm">{pickerTitle}</span>
+                  <div className="flex gap-1.5">
                     <button
                       onClick={() => selectAllInCategory(pickerPeople)}
-                      className="text-xs px-3 py-1.5 bg-sienna-500 text-white rounded-full font-medium"
+                      className="text-[10px] px-2 py-1 bg-sienna-400 text-white rounded-full font-medium"
                     >
                       Add All
                     </button>
                     <button
                       onClick={() => clearCategory(pickerPeople)}
-                      className="text-xs px-3 py-1.5 bg-warm-200 text-warm-600 rounded-full font-medium"
+                      className="text-[10px] px-2 py-1 bg-warm-200 text-warm-500 rounded-full font-medium"
                     >
                       Clear
                     </button>
                   </div>
                 </div>
-                <PersonPicker people={pickerPeople} selected={selected} onToggle={togglePerson} onToggleFavorite={onToggleFavorite} onShowGroup={(gid) => setShowPeoplePicker(gid)} title="Tap to add" />
+                <PersonPicker people={pickerPeople} selected={selected} onToggle={togglePerson} onToggleFavorite={onToggleFavorite} onShowGroup={(gid) => setShowPeoplePicker(gid)} title="" />
               </>
             )
           })()}
         </div>
       )}
 
-      {/* Date Selection */}
-      <div className="mb-4">
-        <div className="section-header flex items-center gap-1">
-          <Calendar className="w-3 h-3" /> Pick a Date
-        </div>
-        <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
-          <CategoryButton
-            label="Today"
-            isActive={!selectedEvent && selectedDate === new Date().toISOString().split('T')[0]}
-            onClick={selectToday}
-          />
-          {attendedEvents.length > 0 && (
-            <CategoryButton
-              label="Concerts"
-              count={attendedEvents.length}
-              isActive={showEventPicker === 'attended'}
-              onClick={() => setShowEventPicker(showEventPicker === 'attended' ? false : 'attended')}
-            />
-          )}
-          {favEvents.length > 0 && (
-            <CategoryButton
-              label="Favorites"
-              count={favEvents.length}
-              isActive={showEventPicker === 'favorites'}
-              onClick={() => setShowEventPicker(showEventPicker === 'favorites' ? false : 'favorites')}
-            />
-          )}
-          <CategoryButton
-            label="All Events"
-            count={events.length}
-            isActive={showEventPicker === 'all'}
-            onClick={() => setShowEventPicker(showEventPicker === 'all' ? false : 'all')}
-          />
-        </div>
-      </div>
-
-      {/* Expandable Event Picker */}
+      {/* Expandable Event Picker - simplified */}
       {showEventPicker && (
-        <div className="card mb-4 bg-warm-50">
-          <div className="font-semibold text-warm-700 mb-3">
-            {showEventPicker === 'attended' && '🎤 Concerts We Saw'}
-            {showEventPicker === 'favorites' && '⭐ Favorite Events'}
+        <div className="card mb-3 p-3 bg-warm-50">
+          <div className="font-medium text-warm-600 text-sm mb-2">
+            {showEventPicker === 'attended' && '🎤 Shows We Saw'}
+            {showEventPicker === 'favorites' && '⭐ Favorites'}
             {showEventPicker === 'all' && '📅 All Events'}
           </div>
-
           {showEventPicker === 'attended' && (
-            <EventPicker events={attendedEvents} selectedDate={selectedDate} onSelectEvent={selectEvent} title="Tap to see ages!" />
+            <EventPicker events={attendedEvents} selectedDate={selectedDate} onSelectEvent={selectEvent} title="" />
           )}
           {showEventPicker === 'favorites' && (
-            <EventPicker events={favEvents} selectedDate={selectedDate} onSelectEvent={selectEvent} title="Tap to see ages!" />
+            <EventPicker events={favEvents} selectedDate={selectedDate} onSelectEvent={selectEvent} title="" />
           )}
           {showEventPicker === 'all' && (
-            <EventPicker events={events} selectedDate={selectedDate} onSelectEvent={selectEvent} title="Tap to see ages!" />
+            <EventPicker events={events} selectedDate={selectedDate} onSelectEvent={selectEvent} title="" />
           )}
         </div>
       )}
 
-      {/* Selected Event Banner - Shows what event is selected */}
+      {/* Selected Event Banner - compact */}
       {selectedEvent && (
-        <div className="card mb-4 bg-sienna-500 text-white">
-          <div className="flex items-center gap-3">
-            <div className="text-4xl">{selectedEvent.emoji || '📅'}</div>
-            <div className="flex-1">
-              <div className="font-bold text-lg">{selectedEvent.name}</div>
-              <div className="text-sienna-200 text-sm">{formatDate(selectedEvent.date)}</div>
-            </div>
-            <button
-              onClick={selectToday}
-              className="px-3 py-1.5 bg-white/20 hover:bg-white/30 rounded-full text-sm font-medium transition-colors"
-            >
-              × Clear
-            </button>
+        <div className="flex items-center gap-2 mb-3 p-2 bg-sienna-400 text-white rounded-lg">
+          <span className="text-xl">{selectedEvent.emoji || '📅'}</span>
+          <div className="flex-1 min-w-0">
+            <div className="font-medium text-sm truncate">{selectedEvent.name}</div>
+            <div className="text-sienna-200 text-xs">{formatDate(selectedEvent.date)}</div>
           </div>
+          <button
+            onClick={selectToday}
+            className="px-2 py-1 bg-white/20 rounded-full text-xs"
+          >
+            ×
+          </button>
         </div>
       )}
 
       {/* Results - Ages on selected date */}
       {selectedPeople.length > 0 ? (
-        <div className="card bg-gradient-to-br from-sienna-50 to-white">
-          <div className="card-header">
-            <Cake className="w-5 h-5 text-sienna-500" />
+        <div className="card p-3">
+          <div className="flex items-center gap-1.5 text-sm font-medium text-warm-600 mb-2">
+            <Cake className="w-3.5 h-3.5 text-sienna-400" />
             {selectedEvent ? (
-              <span>Ages at <strong>{selectedEvent.name}</strong></span>
+              <span>Ages at {selectedEvent.name}</span>
             ) : (
-              <span>Ages on {formatDate(selectedDate)}</span>
+              <span>Ages Today</span>
             )}
           </div>
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {selectedPeople
               .sort((a, b) => new Date(a.birthday) - new Date(b.birthday))
               .map(p => (
@@ -1047,24 +988,18 @@ function TimelinePage({ people, events, groups = [], onToggleFavorite, loading }
                 />
               ))}
           </div>
-
-          {/* Clear all button */}
           <button
             onClick={() => setSelected([])}
-            className="w-full mt-3 py-2 text-sm text-warm-500 hover:text-warm-700 font-medium"
+            className="w-full mt-2 py-1.5 text-xs text-warm-400 hover:text-warm-600 font-medium"
           >
-            Clear All People
+            Clear All
           </button>
         </div>
       ) : (
-        <div className="card">
-          <div className="empty-state">
-            <div className="icon">👆</div>
-            <div className="message">
-              Tap the buttons above to pick people!
-              <br />
-              <span className="text-sm text-warm-400">No typing needed 😊</span>
-            </div>
+        <div className="card p-6 text-center">
+          <div className="text-3xl mb-2">👆</div>
+          <div className="text-warm-500 text-sm">
+            Tap buttons above to pick people!
           </div>
         </div>
       )}
@@ -1097,18 +1032,18 @@ function PeoplePage({ people, groups = [], onToggleFavorite, onSelectPerson, loa
   if (loading) return <LoadingSpinner />
 
   return (
-    <div className="p-4 pb-24 animate-fade-in">
-      <h1 className="text-2xl font-display font-bold text-sienna-700 mb-4 flex items-center gap-2">
-        <Users className="w-6 h-6" />
+    <div className="p-3 pb-24 animate-fade-in">
+      <h1 className="text-lg font-display font-bold text-sienna-500 mb-3 flex items-center gap-1.5">
+        <Users className="w-4 h-4" />
         People
       </h1>
 
       {favorites.length > 0 && (
-        <div className="mb-4">
-          <div className="section-header flex items-center gap-1">
-            <Star className="w-3 h-3" /> Favorites
+        <div className="mb-3">
+          <div className="text-[10px] font-semibold text-warm-400 uppercase tracking-wide mb-1.5 px-1 flex items-center gap-1">
+            <Star className="w-2.5 h-2.5" /> Favorites
           </div>
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-1.5">
             {favorites.map(p => (
               <Pill key={p.id} item={p} onClick={() => onSelectPerson(p)} />
             ))}
@@ -1116,13 +1051,14 @@ function PeoplePage({ people, groups = [], onToggleFavorite, onSelectPerson, loa
         </div>
       )}
 
-      <div className="search-box">
-        <Search className="w-5 h-5 text-warm-400" />
+      <div className="search-box mb-3">
+        <Search className="w-4 h-4 text-warm-400" />
         <input
           type="text"
           placeholder="Search people..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
+          className="text-sm"
         />
       </div>
 
@@ -1150,12 +1086,12 @@ function PeoplePage({ people, groups = [], onToggleFavorite, onSelectPerson, loa
         <>
           {/* Family */}
           {familyMembers.length > 0 && (
-            <div className="card mb-4">
-              <div className="card-header text-warm-600">
-                <Heart className="w-5 h-5" />
+            <div className="card mb-3 p-3">
+              <div className="flex items-center gap-1.5 text-sm font-medium text-warm-600 mb-2">
+                <Heart className="w-3.5 h-3.5 text-blush-400" />
                 Our Family
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {familyMembers.map(p => (
                   <PersonRow
                     key={p.id}
@@ -1173,12 +1109,12 @@ function PeoplePage({ people, groups = [], onToggleFavorite, onSelectPerson, loa
           {groupsWithPeople.map(group => {
             const groupPeople = peopleWithGroups.filter(p => p.group_id === group.id)
             return (
-              <div key={group.id} className="card mb-4">
-                <div className="card-header text-warm-600">
-                  <span className="text-lg mr-1">{group.emoji || '👥'}</span>
+              <div key={group.id} className="card mb-3 p-3">
+                <div className="flex items-center gap-1.5 text-sm font-medium text-warm-600 mb-2">
+                  <span className="text-base">{group.emoji || '👥'}</span>
                   {group.name}
                 </div>
-                <div className="space-y-1">
+                <div className="space-y-0.5">
                   {groupPeople.map(p => (
                     <PersonRow
                       key={p.id}
@@ -1195,12 +1131,12 @@ function PeoplePage({ people, groups = [], onToggleFavorite, onSelectPerson, loa
 
           {/* People without groups */}
           {peopleWithoutGroups.length > 0 && (
-            <div className="card">
-              <div className="card-header text-warm-600">
-                <Star className="w-5 h-5" />
+            <div className="card p-3">
+              <div className="flex items-center gap-1.5 text-sm font-medium text-warm-600 mb-2">
+                <Star className="w-3.5 h-3.5 text-sienna-400" />
                 Others
               </div>
-              <div className="space-y-1">
+              <div className="space-y-0.5">
                 {peopleWithoutGroups.map(p => (
                   <PersonRow
                     key={p.id}
@@ -1221,21 +1157,24 @@ function PeoplePage({ people, groups = [], onToggleFavorite, onSelectPerson, loa
 function SongsPage({ works, people, family, onToggleFavorite, onSelectSong, loading }) {
   if (loading) return <LoadingSpinner />
 
-  const albums = works.filter(w => w.type === 'album')
-  // Include singles AND songs (individual tracks)
-  const allSongs = works.filter(w => w.type === 'single' || w.type === 'song')
+  // Group ALL works by artist/group (albums, singles, songs together)
+  const worksByGroup = {}
+  works.forEach(work => {
+    // Skip tracks that belong to an album (they'll show when album is tapped)
+    if (work.parent_id) return
 
-  // Group songs by their group_id for better organization
-  const songsByGroup = {}
-  allSongs.forEach(song => {
-    const groupId = song.group_id || 'other'
-    if (!songsByGroup[groupId]) {
-      songsByGroup[groupId] = []
+    const groupId = work.group_id || 'other'
+    if (!worksByGroup[groupId]) {
+      worksByGroup[groupId] = { albums: [], singles: [] }
     }
-    songsByGroup[groupId].push(song)
+    if (work.type === 'album') {
+      worksByGroup[groupId].albums.push(work)
+    } else if (work.type === 'single' || work.type === 'song') {
+      worksByGroup[groupId].singles.push(work)
+    }
   })
 
-  // Get group names for display (using actual database group_ids)
+  // Get group names for display
   const groupNames = {
     'xomgpop': 'XOMG POP!',
     'sharer-fam': 'Stephen Sharer',
@@ -1244,84 +1183,104 @@ function SongsPage({ works, people, family, onToggleFavorite, onSelectSong, load
     'kidz-bop': 'Kidz Bop',
     'ninja-kidz': 'Ninja Kidz',
     'stephen-sharer': 'Stephen Sharer',
-    'other': 'Other Songs'
+    'other': 'Other'
   }
 
-  const groupColors = {
-    'xomgpop': 'from-pink-400 to-purple-500',
-    'sharer-fam': 'from-blue-400 to-cyan-500',
-    'spy-ninjas': 'from-red-500 to-orange-500',
-    'fun-squad': 'from-green-500 to-emerald-500',
-    'kidz-bop': 'from-yellow-400 to-orange-400',
-    'ninja-kidz': 'from-green-500 to-emerald-500',
-    'stephen-sharer': 'from-blue-400 to-cyan-500',
-    'other': 'from-gray-400 to-gray-500'
+  const groupEmojis = {
+    'xomgpop': '🎀',
+    'sharer-fam': '🎬',
+    'spy-ninjas': '🥷',
+    'fun-squad': '⚡',
+    'kidz-bop': '🎤',
+    'ninja-kidz': '⚡',
+    'other': '🎵'
   }
+
+  // Sort groups - those with albums first
+  const sortedGroups = Object.keys(worksByGroup).sort((a, b) => {
+    const aHasAlbums = worksByGroup[a].albums.length > 0
+    const bHasAlbums = worksByGroup[b].albums.length > 0
+    if (aHasAlbums && !bHasAlbums) return -1
+    if (!aHasAlbums && bHasAlbums) return 1
+    return (groupNames[a] || a).localeCompare(groupNames[b] || b)
+  })
+
+  const totalWorks = Object.values(worksByGroup).reduce((sum, g) => sum + g.albums.length + g.singles.length, 0)
 
   return (
-    <div className="p-4 pb-24 animate-fade-in">
-      <h1 className="text-2xl font-display font-bold text-sienna-700 mb-4 flex items-center gap-2">
-        <Disc3 className="w-6 h-6" />
+    <div className="p-3 pb-24 animate-fade-in">
+      <h1 className="text-lg font-display font-bold text-sienna-500 mb-3 flex items-center gap-1.5">
+        <Disc3 className="w-4 h-4" />
         Songs
       </h1>
 
-      {/* Albums */}
-      {albums.length > 0 && (
-        <div className="mb-4">
-          {albums.map(album => (
-            <div
-              key={album.id}
-              className="card cursor-pointer hover:shadow-lg transition-shadow mb-3"
-              style={{ background: 'linear-gradient(135deg, #FFD700, #FFA500)' }}
-              onClick={() => onSelectSong(album)}
-            >
-              <div className="flex items-center gap-4 p-4">
-                <div className="w-16 h-16 bg-white rounded-lg flex items-center justify-center text-3xl">
+      {sortedGroups.map(groupId => {
+        const group = worksByGroup[groupId]
+        const totalCount = group.albums.length + group.singles.length
+        if (totalCount === 0) return null
+
+        return (
+          <div key={groupId} className="card mb-3 p-3">
+            {/* Artist Header */}
+            <div className="flex items-center gap-1.5 mb-2 pb-2 border-b border-warm-100">
+              <span className="text-base">{groupEmojis[groupId] || '🎵'}</span>
+              <span className="font-medium text-warm-600 text-sm">
+                {groupNames[groupId] || groupId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+              </span>
+              <span className="text-[10px] text-warm-400 ml-auto">
+                {group.albums.length > 0 && `${group.albums.length} album${group.albums.length > 1 ? 's' : ''}`}
+                {group.albums.length > 0 && group.singles.length > 0 && ' · '}
+                {group.singles.length > 0 && `${group.singles.length} single${group.singles.length > 1 ? 's' : ''}`}
+              </span>
+            </div>
+
+            {/* Albums first */}
+            {group.albums.map(album => (
+              <div
+                key={album.id}
+                className="flex items-center gap-2 p-2 mb-1.5 bg-warm-50 rounded-lg cursor-pointer hover:bg-warm-100 transition-colors"
+                onClick={() => onSelectSong(album)}
+              >
+                <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center text-xl shadow-soft">
                   {album.emoji || '💿'}
                 </div>
-                <div className="flex-1 text-white">
-                  <div className="font-bold text-lg">{album.name}</div>
-                  <div className="opacity-90 text-sm">Album • {formatDate(album.release_date)}</div>
-                  <div className="text-sm mt-1 opacity-80">Tap to see who was in the band!</div>
+                <div className="flex-1 min-w-0">
+                  <div className="font-medium text-warm-600 text-sm truncate">{album.name}</div>
+                  <div className="text-[10px] text-warm-400">Album · {formatDate(album.release_date)}</div>
                 </div>
-                <ChevronRight className="w-6 h-6 text-white" />
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Songs grouped by artist/band */}
-      {Object.keys(songsByGroup).map(groupId => (
-        <div key={groupId} className="card mb-4">
-          <div className={`card-header bg-gradient-to-r ${groupColors[groupId] || groupColors.other} text-white rounded-t-xl -mx-4 -mt-4 px-4 py-3 mb-3`}>
-            <Music className="w-5 h-5" />
-            {groupNames[groupId] || groupId.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
-            <span className="ml-auto text-sm opacity-80">{songsByGroup[groupId].length} songs</span>
-          </div>
-          <div className="space-y-1">
-            {songsByGroup[groupId].map(song => (
-              <div
-                key={song.id}
-                className="item-row cursor-pointer hover:bg-sienna-50"
-                onClick={() => onSelectSong(song)}
-              >
-                <div className="avatar bg-pink-100">
-                  <span>{song.emoji || '🎵'}</span>
-                </div>
-                <div className="info">
-                  <div className="name">{song.name}</div>
-                  <div className="meta">{formatDate(song.release_date)}</div>
-                </div>
-                <ChevronRight className="w-5 h-5 text-warm-300" />
+                <ChevronRight className="w-3.5 h-3.5 text-warm-300" />
               </div>
             ))}
-          </div>
-        </div>
-      ))}
 
-      {/* Show message if no songs */}
-      {albums.length === 0 && allSongs.length === 0 && (
+            {/* Singles */}
+            {group.singles.length > 0 && (
+              <div className="space-y-0.5">
+                {group.singles.map(song => (
+                  <div
+                    key={song.id}
+                    className="flex items-center gap-2 p-1.5 rounded-lg cursor-pointer hover:bg-warm-50 transition-colors"
+                    onClick={() => onSelectSong(song)}
+                  >
+                    <div className="w-7 h-7 bg-warm-100 rounded flex items-center justify-center text-sm">
+                      {song.emoji || '🎵'}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm font-medium text-warm-600 truncate">{song.name}</div>
+                      <div className="text-[10px] text-warm-400">
+                        {song.type === 'single' ? 'Single' : 'Song'} · {formatDate(song.release_date)}
+                      </div>
+                    </div>
+                    <ChevronRight className="w-3 h-3 text-warm-300" />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )
+      })}
+
+      {/* Empty state */}
+      {totalWorks === 0 && (
         <div className="text-center text-warm-500 py-8">
           No songs yet!
         </div>
@@ -1344,25 +1303,25 @@ function EventsPage({ events, people, family, onToggleFavorite, loading }) {
     )
 
     return (
-      <div className="p-4 pb-24 animate-fade-in">
+      <div className="p-3 pb-24 animate-fade-in">
         <BackButton onClick={() => setSelectedEvent(null)} />
 
-        <div className="card mb-4 bg-gradient-to-br from-purple-500 to-purple-700 text-white">
-          <div className="text-center py-6">
-            <div className="text-5xl mb-2">{selectedEvent.emoji || '📅'}</div>
-            <h2 className="text-2xl font-display font-bold">{selectedEvent.name}</h2>
-            <p className="opacity-90">{formatDate(selectedEvent.date)}</p>
-            {selectedEvent.description && <p className="mt-2 text-sm">{selectedEvent.description}</p>}
+        <div className="card mb-3 p-4 bg-sienna-400 text-white">
+          <div className="text-center">
+            <div className="text-3xl mb-2">{selectedEvent.emoji || '📅'}</div>
+            <h2 className="text-lg font-display font-bold">{selectedEvent.name}</h2>
+            <p className="opacity-90 text-sm">{formatDate(selectedEvent.date)}</p>
+            {selectedEvent.description && <p className="mt-2 text-sm opacity-80">{selectedEvent.description}</p>}
           </div>
         </div>
 
         {bandMembers.length > 0 && (
-          <div className="card mb-4 bg-gradient-to-br from-yellow-50 to-white">
-            <div className="card-header text-yellow-600">
-              <Music className="w-5 h-5" />
+          <div className="card mb-3 p-3 bg-gradient-to-br from-blush-50 to-white">
+            <div className="flex items-center gap-1.5 text-sm font-medium text-blush-500 mb-2">
+              <Music className="w-3.5 h-3.5" />
               Band Members
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {bandMembers.map(m => (
                 <PersonRow
                   key={m.id}
@@ -1376,12 +1335,12 @@ function EventsPage({ events, people, family, onToggleFavorite, loading }) {
         )}
 
         {family.length > 0 && (
-          <div className="card bg-gradient-to-br from-blue-50 to-white">
-            <div className="card-header text-blue-600">
-              <Users className="w-5 h-5" />
+          <div className="card p-3 bg-gradient-to-br from-dusty-50 to-white">
+            <div className="flex items-center gap-1.5 text-sm font-medium text-dusty-500 mb-2">
+              <Users className="w-3.5 h-3.5" />
               Our Family
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {family.map(f => (
                 <PersonRow
                   key={f.id}
@@ -1398,70 +1357,70 @@ function EventsPage({ events, people, family, onToggleFavorite, loading }) {
   }
 
   return (
-    <div className="p-4 pb-24 animate-fade-in">
-      <h1 className="text-2xl font-display font-bold text-sienna-700 mb-4 flex items-center gap-2">
-        <Calendar className="w-6 h-6" />
+    <div className="p-3 pb-24 animate-fade-in">
+      <h1 className="text-lg font-display font-bold text-sienna-500 mb-3 flex items-center gap-1.5">
+        <Calendar className="w-4 h-4" />
         Events
       </h1>
 
       {attended.length > 0 && (
-        <div className="card bg-gradient-to-br from-sage-50 to-white mb-4">
-          <div className="card-header text-sage-600">
-            <Sparkles className="w-5 h-5" />
+        <div className="card p-3 bg-gradient-to-br from-blush-50 to-white mb-3">
+          <div className="flex items-center gap-1.5 text-sm font-medium text-blush-500 mb-2">
+            <Sparkles className="w-3.5 h-3.5" />
             Shows We Saw!
           </div>
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {attended.map(e => (
               <div
                 key={e.id}
-                className="item-row cursor-pointer hover:bg-sage-50"
+                className="item-row cursor-pointer hover:bg-blush-50"
                 onClick={() => setSelectedEvent(e)}
               >
-                <div className="avatar bg-sage-100">
-                  <span>{e.emoji || '📅'}</span>
+                <div className="avatar bg-blush-100">
+                  <span className="text-base">{e.emoji || '📅'}</span>
                 </div>
                 <div className="info">
-                  <div className="name">{e.name}</div>
-                  <div className="meta">{formatDate(e.date)}</div>
+                  <div className="name text-sm">{e.name}</div>
+                  <div className="meta text-xs">{formatDate(e.date)}</div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-warm-300" />
+                <ChevronRight className="w-3.5 h-3.5 text-warm-300" />
               </div>
             ))}
           </div>
         </div>
       )}
 
-      <div className="card">
-        <div className="card-header">
-          <Calendar className="w-5 h-5 text-sienna-500" />
+      <div className="card p-3">
+        <div className="flex items-center gap-1.5 text-sm font-medium text-warm-600 mb-2">
+          <Calendar className="w-3.5 h-3.5 text-sienna-400" />
           All Events
         </div>
         {events.length > 0 ? (
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {events.map(e => (
               <div
                 key={e.id}
-                className="item-row cursor-pointer hover:bg-sienna-50"
+                className="item-row cursor-pointer hover:bg-warm-50"
                 onClick={() => setSelectedEvent(e)}
               >
                 <div className="avatar">
-                  <span>{e.emoji || '📅'}</span>
+                  <span className="text-base">{e.emoji || '📅'}</span>
                 </div>
                 <div className="info">
-                  <div className="name">{e.name}</div>
-                  <div className="meta">{formatDate(e.date)}</div>
+                  <div className="name text-sm">{e.name}</div>
+                  <div className="meta text-xs">{formatDate(e.date)}</div>
                 </div>
                 {e.attended && (
-                  <span className="text-xs text-sage-500 font-medium">✓ went</span>
+                  <span className="text-[10px] text-dusty-400 font-medium">✓ went</span>
                 )}
-                <ChevronRight className="w-5 h-5 text-warm-300" />
+                <ChevronRight className="w-3.5 h-3.5 text-warm-300" />
               </div>
             ))}
           </div>
         ) : (
-          <div className="empty-state">
-            <div className="icon">📅</div>
-            <div className="message">No events yet</div>
+          <div className="text-center py-6">
+            <div className="text-2xl mb-1">📅</div>
+            <div className="text-warm-400 text-sm">No events yet</div>
           </div>
         )}
       </div>
@@ -1481,19 +1440,19 @@ function GroupsPage({ groups, events, people, family, onToggleFavorite, loading 
     const formerMembers = groupMembers.filter(m => m.left_date)
 
     return (
-      <div className="p-4 pb-24 animate-fade-in">
+      <div className="p-3 pb-24 animate-fade-in">
         <BackButton onClick={() => setSelectedGroup(null)} />
 
-        <div className="card bg-gradient-to-br from-pink-100 to-white mb-4">
-          <div className="text-center py-4">
-            <div className="text-5xl mb-2">{selectedGroup.emoji || '🎵'}</div>
-            <h2 className="text-2xl font-display font-bold text-sienna-700">{selectedGroup.name}</h2>
-            <p className="text-sienna-500 capitalize">{selectedGroup.type}</p>
+        <div className="card p-4 bg-gradient-to-br from-blush-50 to-white mb-3">
+          <div className="text-center">
+            <div className="text-3xl mb-2">{selectedGroup.emoji || '🎵'}</div>
+            <h2 className="text-lg font-display font-bold text-sienna-500">{selectedGroup.name}</h2>
+            <p className="text-sienna-400 capitalize text-sm">{selectedGroup.type}</p>
             {selectedGroup.description && (
               <p className="text-sm text-warm-500 mt-2">{selectedGroup.description}</p>
             )}
             {selectedGroup.start_date && (
-              <p className="text-xs text-warm-400 mt-2">
+              <p className="text-[10px] text-warm-400 mt-2">
                 {formatDate(selectedGroup.start_date)} - {selectedGroup.end_date ? formatDate(selectedGroup.end_date) : 'Present'}
               </p>
             )}
@@ -1502,12 +1461,12 @@ function GroupsPage({ groups, events, people, family, onToggleFavorite, loading 
 
         {/* Current Members */}
         {currentMembers.length > 0 && (
-          <div className="card mb-4">
-            <div className="card-header text-purple-600">
-              <Music className="w-5 h-5" />
+          <div className="card p-3 mb-3">
+            <div className="flex items-center gap-1.5 text-sm font-medium text-sienna-500 mb-2">
+              <Music className="w-3.5 h-3.5" />
               Current Members
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {currentMembers.map(m => (
                 <PersonRow key={m.id} person={m} showHeart={false} />
               ))}
@@ -1517,35 +1476,35 @@ function GroupsPage({ groups, events, people, family, onToggleFavorite, loading 
 
         {/* Former Members */}
         {formerMembers.length > 0 && (
-          <div className="card mb-4">
-            <div className="card-header text-warm-500">
-              <Users className="w-5 h-5" />
+          <div className="card p-3 mb-3">
+            <div className="flex items-center gap-1.5 text-sm font-medium text-warm-400 mb-2">
+              <Users className="w-3.5 h-3.5" />
               Former Members
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {formerMembers.map(m => (
-                <PersonRow key={m.id} person={{...m, color: '#999'}} showHeart={false} />
+                <PersonRow key={m.id} person={{...m, color: '#A39B8C'}} showHeart={false} />
               ))}
             </div>
           </div>
         )}
 
         {groupEvents.length > 0 && (
-          <div className="card">
-            <div className="card-header">
-              <Calendar className="w-5 h-5 text-sienna-500" />
+          <div className="card p-3">
+            <div className="flex items-center gap-1.5 text-sm font-medium text-warm-600 mb-2">
+              <Calendar className="w-3.5 h-3.5 text-sienna-400" />
               Timeline
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {groupEvents.sort((a, b) => new Date(a.date) - new Date(b.date)).map(e => (
                 <div key={e.id} className="item-row">
                   <div className="avatar">
-                    <span>{e.emoji || '📅'}</span>
+                    <span className="text-base">{e.emoji || '📅'}</span>
                   </div>
                   <div className="info">
-                    <div className="name">{e.name}</div>
-                    <div className="meta">{formatDate(e.date)}</div>
-                    {e.description && <div className="text-xs text-warm-400">{e.description}</div>}
+                    <div className="name text-sm">{e.name}</div>
+                    <div className="meta text-xs">{formatDate(e.date)}</div>
+                    {e.description && <div className="text-[10px] text-warm-400">{e.description}</div>}
                   </div>
                 </div>
               ))}
@@ -1557,29 +1516,29 @@ function GroupsPage({ groups, events, people, family, onToggleFavorite, loading 
   }
 
   return (
-    <div className="p-4 pb-24 animate-fade-in">
-      <h1 className="text-2xl font-display font-bold text-sienna-700 mb-4 flex items-center gap-2">
-        <Music className="w-6 h-6" />
+    <div className="p-3 pb-24 animate-fade-in">
+      <h1 className="text-lg font-display font-bold text-sienna-500 mb-3 flex items-center gap-1.5">
+        <Music className="w-4 h-4" />
         Groups & Shows
       </h1>
 
-      <div className="card">
+      <div className="card p-3">
         {groups.length > 0 ? (
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {groups.map(g => (
               <div
                 key={g.id}
-                className="item-row cursor-pointer hover:bg-sienna-50"
+                className="item-row cursor-pointer hover:bg-warm-50"
                 onClick={() => setSelectedGroup(g)}
               >
                 <div className="avatar">
-                  <span>{g.emoji || '🎵'}</span>
+                  <span className="text-base">{g.emoji || '🎵'}</span>
                 </div>
                 <div className="info">
-                  <div className="name">{g.name}</div>
-                  <div className="meta capitalize">{g.type}</div>
+                  <div className="name text-sm">{g.name}</div>
+                  <div className="meta capitalize text-xs">{g.type}</div>
                 </div>
-                <ChevronRight className="w-5 h-5 text-warm-300" />
+                <ChevronRight className="w-3.5 h-3.5 text-warm-300" />
                 <HeartButton
                   isFavorite={g.isFavorite}
                   onToggle={(e) => { e.stopPropagation(); onToggleFavorite(g.id) }}
@@ -1588,9 +1547,9 @@ function GroupsPage({ groups, events, people, family, onToggleFavorite, loading 
             ))}
           </div>
         ) : (
-          <div className="empty-state">
-            <div className="icon">🎵</div>
-            <div className="message">No groups yet</div>
+          <div className="text-center py-6">
+            <div className="text-2xl mb-1">🎵</div>
+            <div className="text-warm-400 text-sm">No groups yet</div>
           </div>
         )}
       </div>
@@ -1652,10 +1611,10 @@ export default function App() {
   // Handle detail views
   if (selectedPerson) {
     return (
-      <div className="min-h-screen min-h-[100dvh] bg-sienna-50">
-        <header className="bg-gradient-to-r from-sienna-500 to-sienna-600 text-white p-4 safe-top">
-          <h1 className="text-xl font-display font-bold flex items-center gap-2">
-            <Sparkles className="w-5 h-5" />
+      <div className="min-h-screen min-h-[100dvh] bg-warm-50">
+        <header className="bg-sienna-400 text-white p-3 safe-top">
+          <h1 className="text-base font-display font-bold flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4" />
             sienna
           </h1>
         </header>
@@ -1670,10 +1629,10 @@ export default function App() {
 
   if (selectedSong) {
     return (
-      <div className="min-h-screen min-h-[100dvh] bg-sienna-50">
-        <header className="bg-gradient-to-r from-sienna-500 to-sienna-600 text-white p-4 safe-top">
-          <h1 className="text-xl font-display font-bold flex items-center gap-2">
-            <Sparkles className="w-5 h-5" />
+      <div className="min-h-screen min-h-[100dvh] bg-warm-50">
+        <header className="bg-sienna-400 text-white p-3 safe-top">
+          <h1 className="text-base font-display font-bold flex items-center gap-1.5">
+            <Sparkles className="w-4 h-4" />
             sienna
           </h1>
         </header>
@@ -1737,21 +1696,21 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-sienna-50">
-      <header className="bg-gradient-to-r from-sienna-500 to-sienna-600 text-white p-4 safe-top">
-        <h1 className="text-xl font-display font-bold flex items-center gap-2">
-          <Sparkles className="w-5 h-5" />
+    <div className="min-h-screen min-h-[100dvh] bg-warm-50">
+      <header className="bg-sienna-400 text-white p-3 safe-top">
+        <h1 className="text-base font-display font-bold flex items-center gap-1.5">
+          <Sparkles className="w-4 h-4" />
           sienna
         </h1>
-        <p className="text-sienna-100 text-sm">How old was everyone?</p>
+        <p className="text-sienna-100 text-xs">How old was everyone?</p>
       </header>
 
-      <main className="pb-20">
+      <main className="pb-16">
         {renderPage()}
       </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-sienna-100 safe-bottom shadow-[0_-4px_20px_rgba(0,0,0,0.08)]">
-        <div className="flex justify-around items-center max-w-md mx-auto px-2 py-2">
+      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-warm-100 safe-bottom shadow-soft">
+        <div className="flex justify-around items-center max-w-md mx-auto px-1 py-1.5">
           <NavButton
             label="Timeline"
             icon={Clock}

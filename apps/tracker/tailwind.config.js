@@ -7,47 +7,55 @@ export default {
   theme: {
     extend: {
       colors: {
-        // Primary - Sienna earth tones
+        // New calm, sophisticated palette
+        // Primary - Chocolate/Brown tones
         sienna: {
-          50: '#FDF8F4',
-          100: '#F9EDE3',
-          200: '#F2D9C7',
-          300: '#E8C4A8',
-          400: '#D4A574',
-          500: '#C38D6B',  // Primary brand color
-          600: '#A67458',
-          700: '#8A5D47',
-          800: '#6E4A39',
-          900: '#5D4E42',
+          50: '#FAF8F6',   // Clay-tinted white
+          100: '#EAE6DA',  // Clay
+          200: '#DDD5C8',  // Light tan
+          300: '#C9B9A8',  // Warm tan
+          400: '#8B7355',  // Flat White (brown)
+          500: '#6B5A48',  // Medium brown
+          600: '#5D4037',  // Chocolate
+          700: '#4A3328',  // Dark chocolate
+          800: '#3D2A20',  // Deep brown
+          900: '#2E1F18',  // Almost black brown
         },
-        // Accent - Soft sage for calm/success states
-        sage: {
-          50: '#F4F7F4',
-          100: '#E8EFE8',
-          200: '#D1DFD1',
-          300: '#A8C4A8',
-          400: '#7FA87F',
-          500: '#5E8A5E',
-          600: '#4A6F4A',
+        // Dusty Blue accent
+        dusty: {
+          50: '#F5F8FA',
+          100: '#E8EFF3',
+          200: '#D4E0E8',
+          300: '#A8BCC8',  // Dusty Blue
+          400: '#8AA4B4',
+          500: '#6B8A9E',
+          600: '#567080',
         },
-        // Warm gray for text/UI
+        // Blush/Salmon tones
+        blush: {
+          50: '#FDF9F8',
+          100: '#EDDCDC',  // Salmon
+          200: '#E4CDCC',
+          300: '#D4B5B2',
+          400: '#C9A89D',  // Blush
+          500: '#B89488',
+          600: '#9E7B70',
+        },
+        // Warm gray for text/UI (adjusted to match)
         warm: {
-          50: '#FAFAF9',
-          100: '#F5F4F2',
-          200: '#E8E6E3',
-          300: '#D4D1CC',
-          400: '#A8A29E',
+          50: '#FAF8F6',
+          100: '#F5F2EE',
+          200: '#EAE6DA',  // Clay
+          300: '#D4CFC4',
+          400: '#A39B8C',
           500: '#78716C',
-          600: '#57534E',
-          700: '#44403C',
-          800: '#292524',
+          600: '#5D5550',
+          700: '#4A4340',
+          800: '#353130',
           900: '#1C1917',
         },
-        // Soft accent colors (muted pastels)
-        blush: '#E8A87C',
-        lavender: '#B4A7C7',
-        sky: '#9BC4CB',
-        coral: '#E07A5F',
+        // Accent for favorites (soft coral/pink)
+        coral: '#C9A89D',
       },
       fontFamily: {
         // Friendly, rounded sans-serif
