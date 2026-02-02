@@ -118,7 +118,7 @@ function getColorForType(type) {
 // ============ COMPONENTS ============
 
 // Global Search/Browse component
-function GlobalSearch({ people, groups, works, events, onSelectPerson, onSelectSong, onSelectGroup, onClose }) {
+function GlobalSearch({ people, groups, works, events, onSelectPerson, onSelectSong, onSelectGroup, onAddToTimeline, onClose }) {
   const [query, setQuery] = useState('')
   const [category, setCategory] = useState('all')
   const [letter, setLetter] = useState(null)
@@ -315,10 +315,9 @@ function GlobalSearch({ people, groups, works, events, onSelectPerson, onSelectS
               {letter && ` starting with "${letter}"`}
             </div>
             {filteredItems.map(item => (
-              <button
+              <div
                 key={`${item.type}-${item.id}`}
-                onClick={() => handleSelect(item)}
-                className="w-full flex items-center gap-2 p-2 rounded-lg bg-white hover:bg-warm-50 transition-colors text-left"
+                className="flex items-center gap-2 p-2 rounded-lg bg-white"
               >
                 <div className="w-9 h-9 rounded-lg bg-warm-100 flex items-center justify-center text-lg">
                   {item.emoji}
@@ -333,8 +332,24 @@ function GlobalSearch({ people, groups, works, events, onSelectPerson, onSelectS
                     </div>
                   )}
                 </div>
-                <ChevronRight className="w-4 h-4 text-warm-300 flex-shrink-0" />
-              </button>
+                {/* Action buttons */}
+                <div className="flex gap-1 flex-shrink-0">
+                  {item.type === 'person' && onAddToTimeline && (
+                    <button
+                      onClick={() => { onAddToTimeline(item.data.id); onClose(); }}
+                      className="px-2 py-1 bg-sienna-400 text-white rounded-full text-[10px] font-medium hover:bg-sienna-500 transition-colors"
+                    >
+                      + Timeline
+                    </button>
+                  )}
+                  <button
+                    onClick={() => handleSelect(item)}
+                    className="px-2 py-1 bg-warm-100 text-warm-600 rounded-full text-[10px] font-medium hover:bg-warm-200 transition-colors"
+                  >
+                    View
+                  </button>
+                </div>
+              </div>
             ))}
           </div>
         ) : (
@@ -366,6 +381,36 @@ function NavButton({ label, icon: Icon, active, onClick }) {
       <Icon className={`w-4 h-4 ${active ? '' : 'opacity-80'}`} />
       <span className="text-[10px]">{label}</span>
     </button>
+  )
+}
+
+// Fixed header with back button - always visible at top
+function FixedHeader({ title, onBack, onSearch }) {
+  return (
+    <div className="sticky top-0 z-40 bg-sienna-400 text-white p-3 safe-top flex items-center justify-between">
+      <div className="flex items-center gap-2">
+        {onBack && (
+          <button
+            onClick={onBack}
+            className="p-1.5 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+        )}
+        <h1 className="text-base font-display font-bold flex items-center gap-1.5">
+          <Sparkles className="w-4 h-4" />
+          {title || 'sienna'}
+        </h1>
+      </div>
+      {onSearch && (
+        <button
+          onClick={onSearch}
+          className="p-1.5 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
+        >
+          <Search className="w-4 h-4" />
+        </button>
+      )}
+    </div>
   )
 }
 
@@ -614,15 +659,13 @@ function LoadingSpinner() {
 
 // ============ DETAIL VIEWS ============
 
-function PersonDetailView({ person, family, onBack }) {
+function PersonDetailView({ person, family }) {
   const ageNow = calcAge(person.birthday)
   const ageAtJoin = person.joined_date ? calcAge(person.birthday, person.joined_date) : null
   const ageAtLeft = person.left_date ? calcAge(person.birthday, person.left_date) : null
 
   return (
     <div className="p-4 pb-24 animate-fade-in">
-      <BackButton onClick={onBack} />
-
       {/* Person Header */}
       <div className="card mb-4 bg-gradient-to-br from-warm-100 to-white">
         <div className="text-center py-4">
@@ -743,7 +786,7 @@ function PersonDetailView({ person, family, onBack }) {
   )
 }
 
-function SongDetailView({ song, people, family, works, onBack }) {
+function SongDetailView({ song, people, family, works }) {
   // Get band members who were active when song was released AND in the same group
   const bandMembers = people.filter(p =>
     p.group_id === song.group_id &&
@@ -759,8 +802,6 @@ function SongDetailView({ song, people, family, works, onBack }) {
 
   return (
     <div className="p-4 pb-24 animate-fade-in">
-      <BackButton onClick={onBack} />
-
       {/* Song Header */}
       <div className="card mb-4 bg-sienna-400 text-white">
         <div className="text-center py-4">
@@ -1009,11 +1050,11 @@ function EventPicker({ events, selectedDate, onSelectEvent, title }) {
   )
 }
 
-function TimelinePage({ people, events, groups = [], onToggleFavorite, loading, onOpenSearch }) {
+function TimelinePage({ people, events, groups = [], onToggleFavorite, loading, onOpenSearch, externalSelection = [], onSelectionChange }) {
   const [selected, setSelected] = useState([])
   const [selectedDate, setSelectedDate] = useState(new Date().toISOString().split('T')[0])
   const [selectedEvent, setSelectedEvent] = useState(null)
-  const [showPeoplePicker, setShowPeoplePicker] = useState(null) // 'family' | group_id | 'all' | null
+  const [showPeoplePicker, setShowPeoplePicker] = useState(null) // 'family' | group_id | null
   const [showEventPicker, setShowEventPicker] = useState(false)
 
   // Auto-select family on first load
@@ -1023,6 +1064,15 @@ function TimelinePage({ people, events, groups = [], onToggleFavorite, loading, 
       setSelected(familyIds)
     }
   }, [people])
+
+  // Sync with external selection (from search "Add to Timeline")
+  useEffect(() => {
+    if (externalSelection.length > 0) {
+      setSelected(prev => [...new Set([...prev, ...externalSelection])])
+      // Clear external selection after syncing
+      if (onSelectionChange) onSelectionChange([])
+    }
+  }, [externalSelection])
 
   // Group people by their actual group
   const familyMembers = people.filter(p => p.type === 'family')
@@ -1494,16 +1544,28 @@ function EventsPage({ events, people, family, onToggleFavorite, loading }) {
   if (loading) return <LoadingSpinner />
 
   if (selectedEvent) {
+    // Only show band members for the EVENT'S group, not all people
     const bandMembers = people.filter(p =>
+      p.group_id === selectedEvent.group_id &&
       p.joined_date &&
       new Date(p.joined_date) <= new Date(selectedEvent.date) &&
       (!p.left_date || new Date(p.left_date) > new Date(selectedEvent.date))
     )
 
     return (
-      <div className="p-3 pb-24 animate-fade-in">
-        <BackButton onClick={() => setSelectedEvent(null)} />
+      <div className="animate-fade-in">
+        {/* Sticky header for event detail */}
+        <div className="sticky top-0 z-30 bg-sienna-400 text-white p-3 flex items-center gap-2">
+          <button
+            onClick={() => setSelectedEvent(null)}
+            className="p-1.5 bg-white/20 rounded-lg"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span className="font-medium text-sm truncate">{selectedEvent.name}</span>
+        </div>
 
+        <div className="p-3 pb-24">
         <div className="card mb-3 p-4 bg-sienna-400 text-white">
           <div className="text-center">
             <div className="text-3xl mb-2">{selectedEvent.emoji || '📅'}</div>
@@ -1550,6 +1612,7 @@ function EventsPage({ events, people, family, onToggleFavorite, loading }) {
             </div>
           </div>
         )}
+        </div>
       </div>
     )
   }
@@ -1638,9 +1701,20 @@ function GroupsPage({ groups, events, people, family, onToggleFavorite, loading 
     const formerMembers = groupMembers.filter(m => m.left_date)
 
     return (
-      <div className="p-3 pb-24 animate-fade-in">
-        <BackButton onClick={() => setSelectedGroup(null)} />
+      <div className="animate-fade-in">
+        {/* Sticky header for group detail */}
+        <div className="sticky top-0 z-30 bg-sienna-400 text-white p-3 flex items-center gap-2">
+          <button
+            onClick={() => setSelectedGroup(null)}
+            className="p-1.5 bg-white/20 rounded-lg"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <span className="text-lg">{selectedGroup.emoji || '🎵'}</span>
+          <span className="font-medium text-sm truncate">{selectedGroup.name}</span>
+        </div>
 
+        <div className="p-3 pb-24">
         <div className="card p-4 bg-gradient-to-br from-blush-50 to-white mb-3">
           <div className="text-center">
             <div className="text-3xl mb-2">{selectedGroup.emoji || '🎵'}</div>
@@ -1709,6 +1783,7 @@ function GroupsPage({ groups, events, people, family, onToggleFavorite, loading 
             </div>
           </div>
         )}
+        </div>
       </div>
     )
   }
@@ -1764,6 +1839,16 @@ export default function App() {
   const [selectedSong, setSelectedSong] = useState(null)
   const [selectedGroup, setSelectedGroup] = useState(null)
   const [showSearch, setShowSearch] = useState(false)
+  const [timelineSelection, setTimelineSelection] = useState([])
+
+  // Function to add person to timeline selection
+  const addToTimeline = (personId) => {
+    setTimelineSelection(prev => {
+      if (prev.includes(personId)) return prev
+      return [...prev, personId]
+    })
+    setPage('timeline') // Go to timeline page
+  }
 
   useEffect(() => {
     async function loadData() {
@@ -1812,16 +1897,27 @@ export default function App() {
   if (selectedPerson) {
     return (
       <div className="min-h-screen min-h-[100dvh] bg-warm-50">
-        <header className="bg-sienna-400 text-white p-3 safe-top">
-          <h1 className="text-base font-display font-bold flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4" />
-            sienna
-          </h1>
-        </header>
+        <FixedHeader
+          title={selectedPerson.nickname || selectedPerson.name}
+          onBack={() => setSelectedPerson(null)}
+          onSearch={() => setShowSearch(true)}
+        />
+        {showSearch && (
+          <GlobalSearch
+            people={data.people}
+            groups={data.groups}
+            works={data.works}
+            events={data.events}
+            onSelectPerson={(p) => { setSelectedPerson(p); setShowSearch(false); }}
+            onSelectSong={(s) => { setSelectedSong(s); setShowSearch(false); }}
+            onSelectGroup={(g) => { setSelectedGroup(g); setPage('groups'); setShowSearch(false); }}
+            onAddToTimeline={(id) => { addToTimeline(id); setShowSearch(false); }}
+            onClose={() => setShowSearch(false)}
+          />
+        )}
         <PersonDetailView
           person={selectedPerson}
           family={family}
-          onBack={() => setSelectedPerson(null)}
         />
       </div>
     )
@@ -1830,18 +1926,29 @@ export default function App() {
   if (selectedSong) {
     return (
       <div className="min-h-screen min-h-[100dvh] bg-warm-50">
-        <header className="bg-sienna-400 text-white p-3 safe-top">
-          <h1 className="text-base font-display font-bold flex items-center gap-1.5">
-            <Sparkles className="w-4 h-4" />
-            sienna
-          </h1>
-        </header>
+        <FixedHeader
+          title={selectedSong.name}
+          onBack={() => setSelectedSong(null)}
+          onSearch={() => setShowSearch(true)}
+        />
+        {showSearch && (
+          <GlobalSearch
+            people={data.people}
+            groups={data.groups}
+            works={data.works}
+            events={data.events}
+            onSelectPerson={(p) => { setSelectedPerson(p); setShowSearch(false); }}
+            onSelectSong={(s) => { setSelectedSong(s); setShowSearch(false); }}
+            onSelectGroup={(g) => { setSelectedGroup(g); setPage('groups'); setShowSearch(false); }}
+            onAddToTimeline={(id) => { addToTimeline(id); setShowSearch(false); }}
+            onClose={() => setShowSearch(false)}
+          />
+        )}
         <SongDetailView
           song={selectedSong}
           people={data.people}
           family={family}
           works={data.works}
-          onBack={() => setSelectedSong(null)}
         />
       </div>
     )
@@ -1892,6 +1999,8 @@ export default function App() {
           groups={data.groups}
           onToggleFavorite={(id) => toggleFavorite('people', id)}
           onOpenSearch={() => setShowSearch(true)}
+          externalSelection={timelineSelection}
+          onSelectionChange={setTimelineSelection}
           loading={loading}
         />
     }
@@ -1927,6 +2036,7 @@ export default function App() {
           onSelectPerson={(p) => { setSelectedPerson(p); setShowSearch(false); }}
           onSelectSong={(s) => { setSelectedSong(s); setShowSearch(false); }}
           onSelectGroup={(g) => { setSelectedGroup(g); setPage('groups'); setShowSearch(false); }}
+          onAddToTimeline={(id) => { addToTimeline(id); setShowSearch(false); }}
           onClose={() => setShowSearch(false)}
         />
       )}
