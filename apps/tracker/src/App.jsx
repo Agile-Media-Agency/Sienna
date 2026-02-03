@@ -2007,46 +2007,48 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-warm-50">
-      <header className="bg-sienna-400 text-white p-3 safe-top">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-base font-display font-bold flex items-center gap-1.5">
-              <Sparkles className="w-4 h-4" />
-              sienna
-            </h1>
-            <p className="text-sienna-100 text-xs">How old was everyone?</p>
+    <div className="min-h-screen min-h-[100dvh] bg-warm-100 flex justify-center">
+      {/* App container with max-width for desktop */}
+      <div className="w-full max-w-md bg-warm-50 min-h-screen min-h-[100dvh] relative shadow-lg">
+        <header className="bg-sienna-400 text-white p-3 safe-top">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-base font-display font-bold flex items-center gap-1.5">
+                <Sparkles className="w-4 h-4" />
+                sienna
+              </h1>
+              <p className="text-sienna-100 text-xs">How old was everyone?</p>
+            </div>
+            <button
+              onClick={() => setShowSearch(true)}
+              className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
+            >
+              <Search className="w-4 h-4" />
+            </button>
           </div>
-          <button
-            onClick={() => setShowSearch(true)}
-            className="p-2 bg-white/20 rounded-lg hover:bg-white/30 transition-colors"
-          >
-            <Search className="w-4 h-4" />
-          </button>
-        </div>
-      </header>
+        </header>
 
-      {/* Global Search Modal */}
-      {showSearch && (
-        <GlobalSearch
-          people={data.people}
-          groups={data.groups}
-          works={data.works}
-          events={data.events}
-          onSelectPerson={(p) => { setSelectedPerson(p); setShowSearch(false); }}
-          onSelectSong={(s) => { setSelectedSong(s); setShowSearch(false); }}
-          onSelectGroup={(g) => { setSelectedGroup(g); setPage('groups'); setShowSearch(false); }}
-          onAddToTimeline={(id) => { addToTimeline(id); setShowSearch(false); }}
-          onClose={() => setShowSearch(false)}
-        />
-      )}
+        {/* Global Search Modal */}
+        {showSearch && (
+          <GlobalSearch
+            people={data.people}
+            groups={data.groups}
+            works={data.works}
+            events={data.events}
+            onSelectPerson={(p) => { setSelectedPerson(p); setShowSearch(false); }}
+            onSelectSong={(s) => { setSelectedSong(s); setShowSearch(false); }}
+            onSelectGroup={(g) => { setSelectedGroup(g); setPage('groups'); setShowSearch(false); }}
+            onAddToTimeline={(id) => { addToTimeline(id); setShowSearch(false); }}
+            onClose={() => setShowSearch(false)}
+          />
+        )}
 
-      <main className="pb-16">
-        {renderPage()}
-      </main>
+        <main className="pb-16">
+          {renderPage()}
+        </main>
 
-      <nav className="fixed bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-warm-100 safe-bottom shadow-soft">
-        <div className="flex justify-around items-center max-w-md mx-auto px-1 py-1.5">
+        <nav className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm border-t border-warm-100 safe-bottom shadow-soft">
+          <div className="flex justify-around items-center px-1 py-1.5">
           <NavButton
             label="Timeline"
             icon={Clock}
@@ -2077,8 +2079,9 @@ export default function App() {
             active={page === 'groups'}
             onClick={() => setPage('groups')}
           />
-        </div>
-      </nav>
+          </div>
+        </nav>
+      </div>
     </div>
   )
 }
